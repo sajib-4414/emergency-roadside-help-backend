@@ -8,6 +8,8 @@ spring:
     level:
       org:
         springframework:
+          data:
+            redis: DEBUG
           security: DEBUG
           springframework: DEBUG
         hibernate:

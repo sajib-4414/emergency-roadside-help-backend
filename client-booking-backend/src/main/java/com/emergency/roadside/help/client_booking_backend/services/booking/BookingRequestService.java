@@ -4,17 +4,29 @@ import com.emergency.roadside.help.client_booking_backend.configs.exceptions.cus
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequest;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequestDTO;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequestRepository;
+import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatus;
 import com.emergency.roadside.help.client_booking_backend.model.client.Client;
 import com.emergency.roadside.help.client_booking_backend.model.client.ClientRepository;
 import com.emergency.roadside.help.client_booking_backend.model.client.User;
 import com.emergency.roadside.help.client_booking_backend.model.vehicle.Vehicle;
 import com.emergency.roadside.help.client_booking_backend.services.vehicle.VehicleService;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import static com.emergency.roadside.help.client_booking_backend.configs.auth.AuthHelper.getCurrentUser;
@@ -27,6 +39,8 @@ public class BookingRequestService {
     private final ModelMapper modelMapper;
     private final VehicleService vehicleService;
     private final ClientRepository clientRepository;
+    private final CacheManager cacheManager;
+//    private final ObjectMapper objectMapper;
 
     @Transactional
     public BookingRequest createBooking(BookingRequestDTO payload) {
@@ -43,7 +57,9 @@ public class BookingRequestService {
         User user = getCurrentUser();
         Client client = clientRepository.findByUser(user).orElseThrow(()->new ItemNotFoundException("client not found"));
         bookingRequest.setRequestedBy(client);
-        log.info("booking request is "+bookingRequest);
+      //  log.info("booking request is "+bookingRequest);
+        bookingRequest.setId(null);
+        bookingRequest.setStatus(BookingStatus.CREATED);
         bookingRequest = bookingRequestRepository.save(bookingRequest);
         return bookingRequest;
     }
@@ -78,5 +94,78 @@ public class BookingRequestService {
         User user = getCurrentUser();
         Client client = clientRepository.findByUser(user).orElseThrow(()->new ItemNotFoundException("client not found"));
         return bookingRequestRepository.findAllByRequestedBy_Id(client.getId());
+    }
+
+
+//    @Cacheable(
+//            value = "booking",
+//            key = "#id",                      // Custom key expression
+//            condition = "#id != null",        // Only cache if ID isn't null
+//            unless = "#result == null"      // Don't cache null results
+////            ,cacheManager = "customManager"
+//    )
+    public BookingRequest getBookingByIdFromCacheOrDB(Long id) throws JsonProcessingException {
+        Cache cache = cacheManager.getCache("booking");
+        Cache.ValueWrapper valueWrapper = cache.get(id);
+
+        if (valueWrapper != null) {
+
+            Object cachedValue = valueWrapper.get();
+            if (cachedValue instanceof LinkedHashMap) {
+                System.out.println("Cached value is not of type BookingRequest: " + cachedValue.getClass());
+                String cacheValueAsString = cachedValue != null ? cachedValue.toString() : "null";
+                System.out.println("Cached value for ID " + id + ": " + cacheValueAsString);
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.registerModule(new JavaTimeModule());
+                objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+//
+//                BookingRequest bookingRequest = objectMapper.convertValue(cachedValue, BookingRequest.class);
+
+//                BookingRequest bookingRequest = (BookingRequest) cachedValue;
+//                ObjectMapper objectMapper = new ObjectMapper();
+//                objectMapper.registerModule(new JavaTimeModule());
+//                objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,false);
+//                BookingRequest bookingRequest = objectMapper.convertValue(cachedValue, BookingRequest.class);
+//                // Re-cache the item to reset TTL
+                String jsonString = objectMapper.writeValueAsString(cachedValue);
+// Then convert from JSON string to BookingRequest
+                BookingRequest bookingRequest = objectMapper.readValue(jsonString, BookingRequest.class);
+                cache.put(id, bookingRequest);
+                return bookingRequest;
+            } else if (cachedValue instanceof BookingRequest) {
+                return (BookingRequest) cachedValue;
+            } else {
+                System.out.println("Cached value is of unknown type: " + cachedValue.getClass());
+                return null;
+            }
+//            if (cachedValue instanceof BookingRequest) {
+//                BookingRequest bookingRequest = (BookingRequest) cachedValue;
+//                // Proceed with bookingRequest
+//                cache.put(id, bookingRequest);
+//                return bookingRequest;
+//            } else {
+//                // Handle the case where the cached value is not of type BookingRequest
+//                System.out.println("Cached value is not of type BookingRequest: " + cachedValue.getClass());
+//                String cacheValueAsString = cachedValue != null ? cachedValue.toString() : "null";
+//                System.out.println("Cached value for ID " + id + ": " + cacheValueAsString);
+//                return null;
+//            }
+
+//            // Item exists in cache, access it to reset TTL
+//            BookingRequest bookingRequest = (BookingRequest) valueWrapper.get();
+//
+//            // Reput the item to reset TTL
+//            cache.put(id, bookingRequest);
+//
+//            return bookingRequest;
+        } else {
+
+            BookingRequest bookingRequest = bookingRequestRepository.findById(id).orElseThrow(()-> new ItemNotFoundException("booking not found"));
+
+            // as accessed from DB we are caching it again
+            cache.put(id, bookingRequest);
+            return bookingRequest;
+        }
     }
 }

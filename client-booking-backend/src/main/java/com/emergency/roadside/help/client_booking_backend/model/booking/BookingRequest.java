@@ -43,5 +43,18 @@ public class BookingRequest extends BaseEntity {
     @Column(name = "service_type", nullable = false)
     private ServiceType serviceType;
 
+    @Override
+    public String toString() {
+        return "BookingRequest(id=" + getId() +
+                ", requestedBy=" + (requestedBy != null ? requestedBy.getId() : "null") +
+                ", dateCreated=" + dateCreated +
+                ", status=" + status +
+                ", vehicle=" + (vehicle != null ? vehicle.getId() : "null") +
+                ", description=" + description +
+                ", priority=" + priority +
+                ", address=" + address +
+                ", serviceType=" + serviceType + ")";
+    }
+
 }
 

@@ -29,7 +29,7 @@ public class Client extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "client_vehicles",
             joinColumns = @JoinColumn(name = "client_id"),

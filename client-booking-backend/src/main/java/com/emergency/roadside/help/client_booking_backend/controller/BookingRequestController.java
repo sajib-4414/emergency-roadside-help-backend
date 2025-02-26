@@ -3,6 +3,7 @@ package com.emergency.roadside.help.client_booking_backend.controller;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequest;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequestDTO;
 import com.emergency.roadside.help.client_booking_backend.services.booking.BookingRequestService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -39,6 +40,12 @@ public class BookingRequestController {
     @PutMapping("/{id}")
     public ResponseEntity<BookingRequest> updateBooking(@PathVariable Long id, @Validated @RequestBody BookingRequestDTO bookingRequestDTO) {
         BookingRequest updatedBooking = bookingRequestService.updateBooking(id, bookingRequestDTO);
+        return ResponseEntity.ok(updatedBooking);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<BookingRequest> getBookingDetails(@PathVariable Long id) throws JsonProcessingException {
+        BookingRequest updatedBooking = bookingRequestService.getBookingByIdFromCacheOrDB(id);
         return ResponseEntity.ok(updatedBooking);
     }
 
