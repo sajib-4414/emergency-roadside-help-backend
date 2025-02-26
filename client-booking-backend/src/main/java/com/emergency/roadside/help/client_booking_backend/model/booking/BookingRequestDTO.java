@@ -9,10 +9,11 @@ import java.time.LocalDateTime;
 
 @Data
 public class BookingRequestDTO {
-    private Long id;
-    private Long clientId;
+
+
     private LocalDateTime dateCreated;
 
+    //client can either send a vehcile which was created before or a new vehcile
     private Long vehicleId;
     private VehicleDTO vehicle;
     private String detailDescription;

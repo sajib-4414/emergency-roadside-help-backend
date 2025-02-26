@@ -8,6 +8,7 @@ import java.util.Set;
 @Data
 public class ProfileDTO {
     private String name;
+    private String email;
     private String username;
     private String phoneNo;
     private Set<Vehicle> clientVehicles;

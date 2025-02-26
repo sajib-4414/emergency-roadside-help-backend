@@ -13,7 +13,7 @@ public class VehicleController {
 
     private VehicleService vehicleService;
 
-    @PutMapping("/vehicles/{vehicleId}")
+    @PutMapping("/{vehicleId}")
     public Vehicle updateMyVehicle(@PathVariable Long vehicleId, @RequestBody Vehicle updatedVehicle) {
         //TODO check if the vehicle is owned by the user
         return vehicleService.updateVehicle(vehicleId, updatedVehicle);

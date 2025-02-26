@@ -29,8 +29,8 @@ public class BookingRequest extends BaseEntity {
     @JoinColumn(name = "vehicle_id", nullable = false)
     private Vehicle vehicle;
 
-    @Column(name = "detail_description")
-    private String detailDescription;
+    @Column(name = "description")
+    private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "priority", nullable = false, columnDefinition = "varchar(50) default 'NOW'")

@@ -8,6 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+import static com.emergency.roadside.help.client_booking_backend.configs.auth.AuthHelper.getCurrentUser;
+
 @RestController
 @RequestMapping("/api/v1/bookings")
 @AllArgsConstructor
@@ -18,6 +22,12 @@ public class BookingRequestController {
     public ResponseEntity<BookingRequest> createBooking(@Validated @RequestBody BookingRequestDTO payload) {
         BookingRequest createdBooking = bookingRequestService.createBooking(payload);
         return ResponseEntity.ok(createdBooking);
+    }
+
+    @GetMapping("/my-bookings")
+    public ResponseEntity<List<BookingRequest>> getMyBookings() {
+        List<BookingRequest> mybookings = bookingRequestService.getAllMyBookings();
+        return ResponseEntity.ok(mybookings);
     }
 
     @DeleteMapping("/{id}")
