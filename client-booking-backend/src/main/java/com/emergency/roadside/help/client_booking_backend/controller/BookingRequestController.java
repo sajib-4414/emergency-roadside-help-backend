@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 import static com.emergency.roadside.help.client_booking_backend.configs.auth.AuthHelper.getCurrentUser;
@@ -44,7 +45,7 @@ public class BookingRequestController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookingRequest> getBookingDetails(@PathVariable Long id) throws JsonProcessingException {
+    public ResponseEntity<BookingRequest> getBookingDetails(@PathVariable Long id) throws IOException {
         BookingRequest updatedBooking = bookingRequestService.getBookingByIdFromCacheOrDB(id);
         return ResponseEntity.ok(updatedBooking);
     }

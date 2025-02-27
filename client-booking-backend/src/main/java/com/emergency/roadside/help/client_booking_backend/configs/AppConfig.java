@@ -53,11 +53,26 @@ public class AppConfig {
 //    }
 
 
+//public static class LongSerializer extends JsonSerializer<Long> {
+//    @Override
+//    public void serialize(Long value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+//        gen.writeString(value.toString());
+//    }
+//}
+//
+//    public static class LongDeserializer extends JsonDeserializer<Long> {
+//        @Override
+//        public Long deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+//            return p.getValueAsLong();
+//        }
+//    }
+
     @Bean
     public ObjectMapper getObjectMapper(){
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         return mapper;
     }
 
@@ -70,7 +85,7 @@ public class AppConfig {
 //        Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(Object.class);
 //        serializer.setObjectMapper(objectMapper);
         RedisCacheConfiguration cacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(1))
+                .entryTtl(Duration.ofSeconds(10))
                 .disableCachingNullValues()
                 .serializeKeysWith(
                         RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
