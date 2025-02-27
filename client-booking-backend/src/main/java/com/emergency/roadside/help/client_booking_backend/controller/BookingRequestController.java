@@ -2,6 +2,7 @@ package com.emergency.roadside.help.client_booking_backend.controller;
 
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequest;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequestDTO;
+import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatusResponse;
 import com.emergency.roadside.help.client_booking_backend.services.booking.BookingRequestService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AllArgsConstructor;
@@ -45,9 +46,9 @@ public class BookingRequestController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookingRequest> getBookingDetails(@PathVariable Long id) throws IOException {
-        BookingRequest updatedBooking = bookingRequestService.getBookingByIdFromCacheOrDB(id);
-        return ResponseEntity.ok(updatedBooking);
+    public ResponseEntity<BookingStatusResponse> getBookingDetails(@PathVariable Long id) throws IOException {
+        BookingStatusResponse bookingStatus = bookingRequestService.getBookingByIdFromCacheOrDB(id);
+        return ResponseEntity.ok(bookingStatus);
     }
 
 }
