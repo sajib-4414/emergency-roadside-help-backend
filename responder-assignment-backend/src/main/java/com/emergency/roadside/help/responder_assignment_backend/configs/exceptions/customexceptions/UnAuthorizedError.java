@@ -4,14 +4,14 @@ import lombok.Getter;
 
 
 @Getter
-public class UnprocessableEntityException extends RuntimeException{
+public class UnAuthorizedError extends RuntimeException{
     private String code;
-    public UnprocessableEntityException(String message) {
+    public UnAuthorizedError(String message) {
         super(message);
         this.code = "invalid_data";
     }
 
-    public UnprocessableEntityException(String code, String message) {
+    public UnAuthorizedError(String code, String message) {
         super(message);
         this.code = code;
     }

@@ -2,9 +2,11 @@ package com.emergency.roadside.help.responder_assignment_backend.configs.auth;
 
 import com.emergency.roadside.help.client_booking_backend.configs.exceptions.ErrorDTO;
 import com.emergency.roadside.help.client_booking_backend.configs.exceptions.ErrorHttpResponse;
+import com.emergency.roadside.help.responder_assignment_backend.external.CustomUserDetails;
+import com.emergency.roadside.help.responder_assignment_backend.external.ExternalUser;
+import com.emergency.roadside.help.responder_assignment_backend.external.UserServiceClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.security.SignatureException;
+import feign.FeignException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,10 +30,10 @@ import java.util.Collections;
 @Component
 @RequiredArgsConstructor
 //this class is more like a middleware
-public class JWTAuthFilter extends OncePerRequestFilter {
+public class AuthenticationFilter extends OncePerRequestFilter {
 
-    private final JWTService jwtService;
-    private final UserDetailsService userDetailsService;
+
+    private final UserServiceClient authService;
 
     //filter chain is more like next() method
     @Override
@@ -44,49 +46,77 @@ public class JWTAuthFilter extends OncePerRequestFilter {
             final String authHeader = request.getHeader("Authorization");
             final String jwt;
             final String username;
-            if(authHeader == null || !authHeader.startsWith("Bearer ")){
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 System.out.println("No token given, all good, passing to next filter");
-                filterChain.doFilter(request,response); //not attaching any user, passing to the next filter/middleware
+                filterChain.doFilter(request, response); //not attaching any user, passing to the next filter/middleware
                 return;
             }
-            jwt =authHeader.substring(7);
-            username = jwtService.extractUsername(jwt);
-            if(username !=null && SecurityContextHolder.getContext().getAuthentication() == null){
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            jwt = authHeader.substring(7);
+            // 🔹 Forward token to the authentication service via Feign
+            ExternalUser externalUser = authService.validateAndGetUser("Bearer " + jwt);
+            // 🔹 Convert ExternalUser to Spring Security UserDetails
+            UserDetails userDetails = new CustomUserDetails(externalUser);
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities()
+            );
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                if(jwtService.isTokenValid(jwt,userDetails)){
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
-            }
-            System.out.println("everything done in jwt, passed to next filter");
-            filterChain.doFilter(request,response);
+            System.out.println("api call made to other service");
+            // 🔹 Attach the user to Spring Security Context
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+            filterChain.doFilter(request, response);
+            System.out.println("all good passing to next");
+//            username = jwtService.extractUsername(jwt);
+//            if(username !=null && SecurityContextHolder.getContext().getAuthentication() == null){
+//                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+//
+//                if(jwtService.isTokenValid(jwt,userDetails)){
+//                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+//                            userDetails,
+//                            null,
+//                            userDetails.getAuthorities()
+//                    );
+//                    authToken.setDetails(
+//                            new WebAuthenticationDetailsSource().buildDetails(request)
+//                    );
+//                    SecurityContextHolder.getContext().setAuthentication(authToken);
+//                }
+//            }
+//            System.out.println("everything done in jwt, passed to next filter");
+//            filterChain.doFilter(request,response);
 
-        } catch (ExpiredJwtException ex) {
-            // Handle the exception and return the error response directly
-            ErrorDTO error = ErrorDTO.builder()
-                    .code("token_expired")
-                    .message("Token Expired, " + ex.getMessage())
-                    .build();
-            ErrorHttpResponse errorResponse = ErrorHttpResponse.builder()
-                    .errors(Collections.singletonList(error))
-                    .build();
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
-            return; // Prevent further processing
+//        } catch (ExpiredJwtException ex) {
+//            // Handle the exception and return the error response directly
+//            ErrorDTO error = ErrorDTO.builder()
+//                    .code("token_expired")
+//                    .message("Token Expired, " + ex.getMessage())
+//                    .build();
+//            ErrorHttpResponse errorResponse = ErrorHttpResponse.builder()
+//                    .errors(Collections.singletonList(error))
+//                    .build();
+//            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+//            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+//            response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
+//            return; // Prevent further processing
+//        }
+//        catch (SignatureException ex) {
+//            // Handle the exception and return the error response directly
+//            ErrorDTO error = ErrorDTO.builder()
+//                    .code("token_wrong")
+//                    .message("Authentication error, " + ex.getMessage())
+//                    .build();
+//            ErrorHttpResponse errorResponse = ErrorHttpResponse.builder()
+//                    .errors(Collections.singletonList(error))
+//                    .build();
+//            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+//            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+//            response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
+//            return; // Prevent further processing
+//        }
         }
-        catch (SignatureException ex) {
-            // Handle the exception and return the error response directly
+        catch (FeignException.Unauthorized ex) {
             ErrorDTO error = ErrorDTO.builder()
-                    .code("token_wrong")
+                    .code("token_wrong_v2")
                     .message("Authentication error, " + ex.getMessage())
                     .build();
             ErrorHttpResponse errorResponse = ErrorHttpResponse.builder()
@@ -95,7 +125,7 @@ public class JWTAuthFilter extends OncePerRequestFilter {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
-            return; // Prevent further processing
+            return;
         }
         catch (InternalAuthenticationServiceException ex) {
 

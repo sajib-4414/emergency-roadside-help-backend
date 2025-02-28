@@ -1,4 +1,4 @@
-package com.emergency.roadside.help.client_booking_backend.configs.exceptions.customexceptions;
+package com.emergency.roadside.help.responder_assignment_backend.configs.exceptions.customexceptions;
 
 import lombok.Getter;
 
