@@ -4,6 +4,7 @@ import com.emergency.roadside.help.client_booking_backend.configs.auth.JWTServic
 import com.emergency.roadside.help.client_booking_backend.configs.exceptions.customexceptions.ItemNotFoundException;
 import com.emergency.roadside.help.client_booking_backend.model.client.*;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
@@ -62,6 +63,19 @@ public class AuthenticationService {
         clientRepository.save(client);
 
 
+        var jwtToken = jwtService.generateToken(user);
+        return  AuthResponse.builder().token(jwtToken).user(user).build();
+
+    }
+
+    @Transactional
+    public AuthResponse registerUserOnly(@Valid RegisterRequest request) {
+        User user = User.builder()
+                .email(request.getEmail())
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .build();
+        userRepository.save(user);
         var jwtToken = jwtService.generateToken(user);
         return  AuthResponse.builder().token(jwtToken).user(user).build();
 

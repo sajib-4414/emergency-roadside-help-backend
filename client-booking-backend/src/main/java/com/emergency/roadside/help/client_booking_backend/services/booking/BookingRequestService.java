@@ -44,8 +44,6 @@ public class BookingRequestService {
     private final ModelMapper modelMapper;
     private final VehicleService vehicleService;
     private final ClientRepository clientRepository;
-    private final CacheManager cacheManager;
-    private final ObjectMapper objectMapper;
     private final CacheService cacheService;
 
     @Transactional

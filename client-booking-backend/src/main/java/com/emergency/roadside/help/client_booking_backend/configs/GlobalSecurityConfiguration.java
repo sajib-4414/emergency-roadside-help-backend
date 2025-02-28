@@ -34,6 +34,7 @@ public class GlobalSecurityConfiguration {
 
                 .authorizeHttpRequests(auth ->
                         auth
+                                .requestMatchers("/api/v1/auth/validate-and-get-user").authenticated()
                                 .requestMatchers("/api/v1/auth/**").permitAll()
                                 .requestMatchers("/actuator/**").permitAll()
                                 .requestMatchers("/error").permitAll()

@@ -1,4 +1,4 @@
-package com.batchproject.housingservice.configs.exceptions.customexceptions;
+package com.emergency.roadside.help.client_booking_backend.configs.exceptions.customexceptions;
 
 import lombok.Getter;
 

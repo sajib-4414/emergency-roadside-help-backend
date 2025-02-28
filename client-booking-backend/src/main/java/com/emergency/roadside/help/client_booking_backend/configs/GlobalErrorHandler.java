@@ -5,6 +5,7 @@ import com.emergency.roadside.help.client_booking_backend.configs.exceptions.Err
 import com.emergency.roadside.help.client_booking_backend.configs.exceptions.ErrorHttpResponse;
 import com.emergency.roadside.help.client_booking_backend.configs.exceptions.customexceptions.*;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -95,15 +96,16 @@ public class GlobalErrorHandler {
 
 
 
-//    @ExceptionHandler(DataIntegrityViolationException.class)
-//    public ResponseEntity<ErrorHttpResponse> handleDuplicateEntry(DataIntegrityViolationException ex) {
-//        ErrorDTO error = ErrorDTO.builder().code("data_error").message("Duplicate data or other error").build();
-//        ErrorHttpResponse errorResponse = ErrorHttpResponse
-//                .builder()
-//                .errors(Collections.singletonList(error))
-//                .build();
-//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-//    }
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorHttpResponse> handleDuplicateEntry(DataIntegrityViolationException ex) {
+        System.out.println("original error"+ex);
+        ErrorDTO error = ErrorDTO.builder().code("data_error").message("Duplicate data or other error").build();
+        ErrorHttpResponse errorResponse = ErrorHttpResponse
+                .builder()
+                .errors(Collections.singletonList(error))
+                .build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+    }
 
 //    @ExceptionHandler(Exception.class)
 //    public ResponseEntity<ErrorHttpResponse> handleAllOtherError(Exception ex) {
