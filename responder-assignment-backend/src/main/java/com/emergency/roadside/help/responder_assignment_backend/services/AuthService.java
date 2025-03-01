@@ -1,12 +1,11 @@
 package com.emergency.roadside.help.responder_assignment_backend.services;
 
 import com.emergency.roadside.help.responder_assignment_backend.external.AuthResponse;
-import com.emergency.roadside.help.responder_assignment_backend.external.ExternalUser;
 import com.emergency.roadside.help.responder_assignment_backend.external.RegisterRequest;
 import com.emergency.roadside.help.responder_assignment_backend.external.UserServiceClient;
-import com.emergency.roadside.help.responder_assignment_backend.model.RegisterDTO;
-import com.emergency.roadside.help.responder_assignment_backend.model.Responder;
-import com.emergency.roadside.help.responder_assignment_backend.model.ResponderRepository;
+import com.emergency.roadside.help.responder_assignment_backend.model.auth.RegisterDTO;
+import com.emergency.roadside.help.responder_assignment_backend.model.responder.Responder;
+import com.emergency.roadside.help.responder_assignment_backend.model.responder.ResponderRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,6 +30,8 @@ public class AuthService {
         responder.setName(payload.getName());
         responder.setCompanyName(payload.getCompanyName());
         responder.setUserId(authResponse.getUser().getId());  // Link userId from external service
+        responder.setPhoneNo(payload.getPhoneNo());
+        responder.setCity(payload.getCity());
 
         responderRepository.save(responder);  // Save the responder in the database
 

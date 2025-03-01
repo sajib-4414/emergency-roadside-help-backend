@@ -1,8 +1,7 @@
 package com.emergency.roadside.help.responder_assignment_backend.controller;
 
 import com.emergency.roadside.help.responder_assignment_backend.external.AuthResponse;
-import com.emergency.roadside.help.responder_assignment_backend.external.RegisterRequest;
-import com.emergency.roadside.help.responder_assignment_backend.model.RegisterDTO;
+import com.emergency.roadside.help.responder_assignment_backend.model.auth.RegisterDTO;
 import com.emergency.roadside.help.responder_assignment_backend.services.AuthService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.emergency.roadside.help.responder_assignment_backend.model;
+package com.emergency.roadside.help.responder_assignment_backend.model.auth;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -26,6 +26,11 @@ public class RegisterDTO {
     private String name;
 
     private String companyName;
+
+    @NotEmpty(message = "city is required")
+    private String city;
+
+    private String phoneNo;
 
 
 }
