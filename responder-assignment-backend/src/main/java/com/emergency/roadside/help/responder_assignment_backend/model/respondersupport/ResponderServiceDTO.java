@@ -1,6 +1,5 @@
-package com.emergency.roadside.help.responder_assignment_backend.model.service;
+package com.emergency.roadside.help.responder_assignment_backend.model.respondersupport;
 
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 

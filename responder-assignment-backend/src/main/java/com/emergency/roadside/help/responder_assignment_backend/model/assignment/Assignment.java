@@ -1,7 +1,7 @@
 package com.emergency.roadside.help.responder_assignment_backend.model.assignment;
 
 import com.emergency.roadside.help.responder_assignment_backend.model.BaseEntity;
-import com.emergency.roadside.help.responder_assignment_backend.model.service.ServiceType;
+import com.emergency.roadside.help.responder_assignment_backend.model.respondersupport.ServiceType;
 import com.emergency.roadside.help.responder_assignment_backend.model.responder.Responder;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

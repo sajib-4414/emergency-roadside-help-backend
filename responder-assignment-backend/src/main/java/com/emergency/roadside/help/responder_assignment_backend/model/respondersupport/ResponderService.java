@@ -1,9 +1,8 @@
-package com.emergency.roadside.help.responder_assignment_backend.model.service;
+package com.emergency.roadside.help.responder_assignment_backend.model.respondersupport;
 
 import com.emergency.roadside.help.responder_assignment_backend.model.BaseEntity;
 import com.emergency.roadside.help.responder_assignment_backend.model.responder.Responder;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +22,7 @@ public class ResponderService extends BaseEntity {
 
     @JoinColumn(name = "responder_id")
     @ManyToOne(cascade = CascadeType.ALL)
-    private Responder provider;
+    private Responder responder;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "service_type", nullable = false)

@@ -20,5 +20,4 @@ public class ExternalUser {
 
     private String username;
 
-    private String password;
 }

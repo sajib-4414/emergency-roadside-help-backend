@@ -50,6 +50,16 @@ public class GlobalErrorHandler {
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
+    @ExceptionHandler(UnAuthorizedError.class)
+    public ResponseEntity<ErrorHttpResponse> handleUnAuthorizedError(UnAuthorizedError ex) {
+        ErrorDTO error = ErrorDTO.builder().code("login expired").message("login expired or not correct, "+ex.getMessage()).build();
+        ErrorHttpResponse errorResponse = ErrorHttpResponse
+                .builder()
+                .errors(Collections.singletonList(error))
+                .build();
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorHttpResponse> handleBadCredentials(MethodArgumentNotValidException ex) {
         List<ErrorDTO> errors = ex.getBindingResult().getFieldErrors().stream()

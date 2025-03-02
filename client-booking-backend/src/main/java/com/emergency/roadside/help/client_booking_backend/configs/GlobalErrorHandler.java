@@ -104,7 +104,7 @@ public class GlobalErrorHandler {
                 .builder()
                 .errors(Collections.singletonList(error))
                 .build();
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errorResponse);
     }
 
 //    @ExceptionHandler(Exception.class)

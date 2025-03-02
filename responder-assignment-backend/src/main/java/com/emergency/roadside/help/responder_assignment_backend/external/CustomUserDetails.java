@@ -15,6 +15,10 @@ public class CustomUserDetails implements UserDetails {
         this.externalUser = externalUser;
     }
 
+    public ExternalUser getExternalUser() {
+        return externalUser;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // Assuming ExternalUser has a "role" field, map it to a Spring Security role

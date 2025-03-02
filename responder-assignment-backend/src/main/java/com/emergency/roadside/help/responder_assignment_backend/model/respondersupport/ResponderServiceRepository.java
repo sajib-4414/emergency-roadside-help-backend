@@ -1,4 +1,4 @@
-package com.emergency.roadside.help.responder_assignment_backend.model.service;
+package com.emergency.roadside.help.responder_assignment_backend.model.respondersupport;
 
 import com.emergency.roadside.help.responder_assignment_backend.model.responder.Responder;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface ResponderServiceRepository extends JpaRepository<ResponderService, Long> {
-    List<ResponderService> findAllByProvider(Responder responder);
+    List<ResponderService> findAllByResponder(Responder responder);
     // Additional query methods can be defined here if needed
 }

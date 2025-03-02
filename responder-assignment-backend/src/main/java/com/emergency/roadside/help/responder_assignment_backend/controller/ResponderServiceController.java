@@ -1,8 +1,7 @@
 package com.emergency.roadside.help.responder_assignment_backend.controller;
 
-import com.emergency.roadside.help.responder_assignment_backend.model.responder.Responder;
-import com.emergency.roadside.help.responder_assignment_backend.model.service.ResponderService;
-import com.emergency.roadside.help.responder_assignment_backend.model.service.ResponderServiceDTO;
+import com.emergency.roadside.help.responder_assignment_backend.model.respondersupport.ResponderService;
+import com.emergency.roadside.help.responder_assignment_backend.model.respondersupport.ResponderServiceDTO;
 import com.emergency.roadside.help.responder_assignment_backend.services.ResponderSupportService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -18,15 +17,15 @@ public class ResponderServiceController {
     private ResponderSupportService responderSupportService;
 
     @PostMapping
-    public ResponderService createService(@RequestBody ResponderServiceDTO responderServiceDTO) {
+    public ResponderService createNewService(@RequestBody ResponderServiceDTO responderServiceDTO) {
         ResponderService createdService = responderSupportService.createService(responderServiceDTO);
         return createdService;
     }
 
     @PutMapping("/{id}")
-    public ResponderService updateService(@PathVariable Long id, @RequestBody ResponderServiceDTO responderServiceDTO) {
+    public ResponderService updateMyService(@PathVariable Long id, @RequestBody ResponderServiceDTO responderServiceDTO) {
 
-        ResponderService updatedService = responderSupportService.updateService(id, responderServiceDTO);
+        ResponderService updatedService = responderSupportService.updateMyService(id, responderServiceDTO);
         return updatedService;
     }
 
