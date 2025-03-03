@@ -1,7 +1,8 @@
 package com.emergency.roadside.help.responder_assignment_backend.services;
 
-import com.emergency.roadside.help.responder_assignment_backend.configs.exceptions.customexceptions.ItemNotFoundException;
-import com.emergency.roadside.help.responder_assignment_backend.external.ExternalUser;
+
+import com.emergency.roadside.help.common_module.commonexternal.ExternalUser;
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
 import com.emergency.roadside.help.responder_assignment_backend.model.responder.Responder;
 import com.emergency.roadside.help.responder_assignment_backend.model.responder.ResponderRepository;
 import com.emergency.roadside.help.responder_assignment_backend.model.respondersupport.ResponderService;

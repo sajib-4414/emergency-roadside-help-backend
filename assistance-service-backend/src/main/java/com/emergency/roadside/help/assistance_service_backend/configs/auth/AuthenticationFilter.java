@@ -10,6 +10,7 @@ import com.emergency.roadside.help.common_module.exceptions.ErrorHttpResponse;
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.UnAuthorizedError;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
+import feign.RetryableException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -108,6 +109,20 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             ErrorDTO error = ErrorDTO.builder()
                     .code("token error")
                     .message("Authentication error, expired or wrong, " + ex.getMessage())
+                    .build();
+            ErrorHttpResponse errorResponse = ErrorHttpResponse.builder()
+                    .errors(Collections.singletonList(error))
+                    .build();
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
+            return;
+        }
+        catch (RetryableException err){
+            System.out.println("feign client found other microservice inaccessible, error="+err);
+            ErrorDTO error = ErrorDTO.builder()
+                    .code("backend_unavailable")
+                    .message("other backend unavailable, try later again")
                     .build();
             ErrorHttpResponse errorResponse = ErrorHttpResponse.builder()
                     .errors(Collections.singletonList(error))

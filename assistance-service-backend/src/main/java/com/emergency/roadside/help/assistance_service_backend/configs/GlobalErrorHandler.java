@@ -5,6 +5,7 @@ package com.emergency.roadside.help.assistance_service_backend.configs;
 import com.emergency.roadside.help.common_module.exceptions.ErrorDTO;
 import com.emergency.roadside.help.common_module.exceptions.ErrorHttpResponse;
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.*;
+import feign.RetryableException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +39,16 @@ public class GlobalErrorHandler {
                 .errors(Collections.singletonList(error))
                 .build();
         return ResponseEntity.unprocessableEntity().body(errorResponse);
+    }
+    @ExceptionHandler(RetryableException.class)
+    public ResponseEntity<ErrorHttpResponse> handleFeignAuthClientInaccessible(RetryableException ex) {
+        System.out.println("feign client unavaialalbe, error"+ex.getMessage());
+        ErrorDTO error = ErrorDTO.builder().code("backend_unavailable").message("other backend unavailable, try later again, ").build();
+        ErrorHttpResponse errorResponse = ErrorHttpResponse
+                .builder()
+                .errors(Collections.singletonList(error))
+                .build();
+        return ResponseEntity.badRequest().body(errorResponse);
     }
 
     @ExceptionHandler(BadCredentialsException.class)

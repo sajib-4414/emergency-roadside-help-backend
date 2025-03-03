@@ -1,13 +1,15 @@
 package com.emergency.roadside.help.responder_assignment_backend.configs.auth;
 
-import com.emergency.roadside.help.client_booking_backend.configs.exceptions.ErrorDTO;
-import com.emergency.roadside.help.client_booking_backend.configs.exceptions.ErrorHttpResponse;
-import com.emergency.roadside.help.responder_assignment_backend.configs.exceptions.customexceptions.UnAuthorizedError;
-import com.emergency.roadside.help.responder_assignment_backend.external.CustomUserDetails;
-import com.emergency.roadside.help.responder_assignment_backend.external.ExternalUser;
+
+import com.emergency.roadside.help.common_module.commonexternal.CustomUserDetails;
+import com.emergency.roadside.help.common_module.commonexternal.ExternalUser;
+import com.emergency.roadside.help.common_module.exceptions.ErrorDTO;
+import com.emergency.roadside.help.common_module.exceptions.ErrorHttpResponse;
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.UnAuthorizedError;
 import com.emergency.roadside.help.responder_assignment_backend.external.UserServiceClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
+import feign.RetryableException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +22,6 @@ import org.springframework.security.authentication.InternalAuthenticationService
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -104,6 +105,20 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             ErrorDTO error = ErrorDTO.builder()
                     .code("token error")
                     .message("Authentication error, expired or wrong, " + ex.getMessage())
+                    .build();
+            ErrorHttpResponse errorResponse = ErrorHttpResponse.builder()
+                    .errors(Collections.singletonList(error))
+                    .build();
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
+            return;
+        }
+        catch (RetryableException err){
+            System.out.println("feign client found other mciroservie inaccessible, error="+err);
+            ErrorDTO error = ErrorDTO.builder()
+                    .code("backend_unavailable")
+                    .message("other backend unavailable, try later again")
                     .build();
             ErrorHttpResponse errorResponse = ErrorHttpResponse.builder()
                     .errors(Collections.singletonList(error))

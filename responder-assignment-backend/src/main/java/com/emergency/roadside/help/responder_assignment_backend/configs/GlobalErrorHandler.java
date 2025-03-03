@@ -1,10 +1,9 @@
 package com.emergency.roadside.help.responder_assignment_backend.configs;
 
-
-import com.emergency.roadside.help.client_booking_backend.configs.exceptions.ErrorDTO;
-import com.emergency.roadside.help.client_booking_backend.configs.exceptions.ErrorHttpResponse;
-
-import com.emergency.roadside.help.responder_assignment_backend.configs.exceptions.customexceptions.*;
+import com.emergency.roadside.help.common_module.exceptions.ErrorDTO;
+import com.emergency.roadside.help.common_module.exceptions.ErrorHttpResponse;
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.*;
+import feign.RetryableException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -53,6 +52,17 @@ public class GlobalErrorHandler {
     @ExceptionHandler(UnAuthorizedError.class)
     public ResponseEntity<ErrorHttpResponse> handleUnAuthorizedError(UnAuthorizedError ex) {
         ErrorDTO error = ErrorDTO.builder().code("login expired").message("login expired or not correct, "+ex.getMessage()).build();
+        ErrorHttpResponse errorResponse = ErrorHttpResponse
+                .builder()
+                .errors(Collections.singletonList(error))
+                .build();
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    @ExceptionHandler(RetryableException.class)
+    public ResponseEntity<ErrorHttpResponse> handleFeignAuthClientInaccessible(RetryableException ex) {
+        System.out.println("feign client unavaialalbe, error"+ex.getMessage());
+        ErrorDTO error = ErrorDTO.builder().code("backend_unavailable").message("other backend unavailable, try later again, ").build();
         ErrorHttpResponse errorResponse = ErrorHttpResponse
                 .builder()
                 .errors(Collections.singletonList(error))

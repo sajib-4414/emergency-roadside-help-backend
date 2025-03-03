@@ -1,6 +1,9 @@
 package com.emergency.roadside.help.responder_assignment_backend.external;
 
 
+import com.emergency.roadside.help.common_module.commonexternal.AuthResponse;
+import com.emergency.roadside.help.common_module.commonexternal.ExternalUser;
+import com.emergency.roadside.help.common_module.commonmodels.RegisterRequest;
 import com.emergency.roadside.help.responder_assignment_backend.configs.FeignClientConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.HttpHeaders;
