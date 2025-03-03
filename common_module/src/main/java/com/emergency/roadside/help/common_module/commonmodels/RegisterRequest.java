@@ -1,4 +1,4 @@
-package com.emergency.roadside.help.responder_assignment_backend.external;
+package com.emergency.roadside.help.common_module.commonmodels;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
