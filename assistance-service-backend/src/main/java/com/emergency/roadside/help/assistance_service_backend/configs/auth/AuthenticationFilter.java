@@ -1,12 +1,13 @@
 package com.emergency.roadside.help.assistance_service_backend.configs.auth;
 
 
-import com.emergency.roadside.help.assistance_service_backend.configs.exceptions.ErrorDTO;
-import com.emergency.roadside.help.assistance_service_backend.configs.exceptions.ErrorHttpResponse;
-import com.emergency.roadside.help.assistance_service_backend.configs.exceptions.customexceptions.UnAuthorizedError;
-import com.emergency.roadside.help.assistance_service_backend.external.CustomUserDetails;
-import com.emergency.roadside.help.assistance_service_backend.external.ExternalUser;
+
+import com.emergency.roadside.help.common_module.commonexternal.CustomUserDetails;
+import com.emergency.roadside.help.common_module.commonexternal.ExternalUser;
 import com.emergency.roadside.help.assistance_service_backend.external.UserServiceClient;
+import com.emergency.roadside.help.common_module.exceptions.ErrorDTO;
+import com.emergency.roadside.help.common_module.exceptions.ErrorHttpResponse;
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.UnAuthorizedError;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import jakarta.servlet.FilterChain;
@@ -14,7 +15,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,7 +23,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
 

@@ -1,8 +1,7 @@
 package com.emergency.roadside.help.assistance_service_backend.configs;
 
 
-
-import com.emergency.roadside.help.assistance_service_backend.configs.exceptions.customexceptions.*;
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.*;
 import feign.Response;
 import feign.Util;
 import feign.codec.ErrorDecoder;

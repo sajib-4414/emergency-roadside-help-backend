@@ -1,10 +1,12 @@
 package com.emergency.roadside.help.assistance_service_backend.models.assistance;
 
 import com.emergency.roadside.help.assistance_service_backend.models.BaseEntity;
-import com.emergency.roadside.help.assistance_service_backend.models.ServiceType;
+import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +14,10 @@ import java.time.LocalDateTime;
 @Entity
 @Builder
 @Table(name = "assistance")
+@NoArgsConstructor
+@AllArgsConstructor
+//assistance cannot be created with API, it is event driven only
+//cannot be deleted either
 public class Assistance extends BaseEntity {
 
     @Column(name = "booking_id", nullable = false)
@@ -33,6 +39,9 @@ public class Assistance extends BaseEntity {
 
     @Column(name = "responder_id", nullable = false)
     private Long responderId;
+
+    @Column(name = "responder_name", nullable = false)
+    private String responderName;
 
     @Column(name = "location", nullable = false)
     private String location;

@@ -2,8 +2,16 @@ package com.emergency.roadside.help.assistance_service_backend.models.assistance
 
 import com.emergency.roadside.help.assistance_service_backend.models.BaseEntity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Builder
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "assistance_items")
 public class AssistanceItem extends BaseEntity {
 

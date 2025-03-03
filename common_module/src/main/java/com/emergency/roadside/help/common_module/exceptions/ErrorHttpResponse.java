@@ -1,4 +1,4 @@
-package com.emergency.roadside.help.assistance_service_backend.configs.exceptions;
+package com.emergency.roadside.help.common_module.exceptions;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

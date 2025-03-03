@@ -1,4 +1,4 @@
-package com.emergency.roadside.help.assistance_service_backend.external;
+package com.emergency.roadside.help.common_module.commonexternal;
 
 
 import org.springframework.security.core.GrantedAuthority;

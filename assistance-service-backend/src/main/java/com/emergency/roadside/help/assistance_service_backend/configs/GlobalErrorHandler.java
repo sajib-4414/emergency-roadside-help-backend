@@ -1,9 +1,10 @@
 package com.emergency.roadside.help.assistance_service_backend.configs;
 
 
-import com.emergency.roadside.help.assistance_service_backend.configs.exceptions.ErrorDTO;
-import com.emergency.roadside.help.assistance_service_backend.configs.exceptions.ErrorHttpResponse;
-import com.emergency.roadside.help.assistance_service_backend.configs.exceptions.customexceptions.*;
+
+import com.emergency.roadside.help.common_module.exceptions.ErrorDTO;
+import com.emergency.roadside.help.common_module.exceptions.ErrorHttpResponse;
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.*;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
