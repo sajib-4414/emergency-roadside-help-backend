@@ -1,6 +1,7 @@
 package com.emergency.roadside.help.client_booking_backend.model.booking;
 
 import com.emergency.roadside.help.client_booking_backend.model.vehicle.VehicleDTO;
+import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.Data;

@@ -1,11 +1,7 @@
-package com.emergency.roadside.help.client_booking_backend.model;
+package com.emergency.roadside.help.common_module.commonmodels;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-
-
-
-import java.time.LocalDateTime;
 
 @MappedSuperclass
 public abstract class BaseEntity {

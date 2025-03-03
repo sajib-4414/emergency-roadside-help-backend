@@ -1,10 +1,11 @@
 package com.emergency.roadside.help.client_booking_backend.services.client;
 
-import com.emergency.roadside.help.client_booking_backend.configs.exceptions.customexceptions.ItemNotFoundException;
+
 import com.emergency.roadside.help.client_booking_backend.model.client.*;
 import com.emergency.roadside.help.client_booking_backend.model.vehicle.Vehicle;
 import com.emergency.roadside.help.client_booking_backend.model.vehicle.VehicleRepository;
 import com.emergency.roadside.help.client_booking_backend.services.vehicle.VehicleService;
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -1,7 +1,8 @@
 package com.emergency.roadside.help.client_booking_backend.model.client;
 
-import com.emergency.roadside.help.client_booking_backend.model.BaseEntity;
+
 import com.emergency.roadside.help.client_booking_backend.model.vehicle.Vehicle;
+import com.emergency.roadside.help.common_module.commonmodels.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

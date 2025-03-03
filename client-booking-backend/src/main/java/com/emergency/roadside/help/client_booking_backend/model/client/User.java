@@ -1,6 +1,7 @@
 package com.emergency.roadside.help.client_booking_backend.model.client;
 
-import com.emergency.roadside.help.client_booking_backend.model.BaseEntity;
+
+import com.emergency.roadside.help.common_module.commonmodels.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,11 +9,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor

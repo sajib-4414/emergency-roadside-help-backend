@@ -1,6 +1,7 @@
 package com.emergency.roadside.help.client_booking_backend.model.booking;
 
 import com.emergency.roadside.help.client_booking_backend.model.client.ClientMiniResponse;
+import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

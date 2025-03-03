@@ -1,6 +1,6 @@
 package com.emergency.roadside.help.assistance_service_backend.models.assistance;
 
-import com.emergency.roadside.help.assistance_service_backend.models.BaseEntity;
+import com.emergency.roadside.help.common_module.commonmodels.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
