@@ -16,6 +16,9 @@ import java.time.LocalDateTime;
 @Data
 public class BookingRequest extends BaseEntity {
 
+    @Column(name = "booking_id")
+    private String bookingId;
+
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
     private Client requestedBy;
