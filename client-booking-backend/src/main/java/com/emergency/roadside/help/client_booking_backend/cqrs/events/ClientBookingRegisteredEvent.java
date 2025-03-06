@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -13,4 +15,13 @@ public class ClientBookingRegisteredEvent {
 
     private Long clientId;
     private String bookingId;
+    private String serviceType;
+
+    private Long vehicleId;
+
+    private String description;
+
+    private String priority;
+
+    private LocalDateTime dateCreated;
 }

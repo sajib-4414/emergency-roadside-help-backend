@@ -1,17 +1,28 @@
 package com.emergency.roadside.help.client_booking_backend.controller;
 
-import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequest;
-import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequestDTO;
-import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatusResponse;
+import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
+import com.emergency.roadside.help.client_booking_backend.cqrs.commads.RegisterClientBookingCommand;
+import com.emergency.roadside.help.client_booking_backend.model.booking.*;
+import com.emergency.roadside.help.client_booking_backend.model.client.Client;
+import com.emergency.roadside.help.client_booking_backend.model.client.ClientRepository;
+import com.emergency.roadside.help.client_booking_backend.model.client.User;
+import com.emergency.roadside.help.client_booking_backend.model.vehicle.Vehicle;
+import com.emergency.roadside.help.client_booking_backend.model.vehicle.VehicleRepository;
 import com.emergency.roadside.help.client_booking_backend.services.booking.BookingRequestService;
+import com.emergency.roadside.help.client_booking_backend.services.vehicle.VehicleService;
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.BadDataException;
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AllArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static com.emergency.roadside.help.client_booking_backend.configs.auth.AuthHelper.getCurrentUser;
 
@@ -20,11 +31,44 @@ import static com.emergency.roadside.help.client_booking_backend.configs.auth.Au
 @AllArgsConstructor
 public class BookingRequestController {
     private final BookingRequestService bookingRequestService;
+    private final ClientRepository clientRepository;
+    private final VehicleRepository vehicleRepository;
+    private final VehicleService vehicleService;
+    private final ModelMapper modelMapper;
 
     @PostMapping
     public ResponseEntity<BookingRequest> createBooking(@Validated @RequestBody BookingRequestDTO payload) {
         BookingRequest createdBooking = bookingRequestService.createBooking(payload);
         return ResponseEntity.ok(createdBooking);
+    }
+
+    @PostMapping("/create-saga-booking")
+    public ResponseEntity<?> createSagaBooking(@Validated @RequestBody BookingRequestDTO payload) {
+        String uniqueBookingId = UUID.randomUUID().toString();
+        User user = getCurrentUser();
+        Client client = clientRepository.findByUser(user).orElseThrow(()->new ItemNotFoundException("client not found"));
+
+        Vehicle vehicle;
+        if(payload.getVehicleId() !=null)
+            vehicle = vehicleRepository.findById(payload.getVehicleId()).orElseThrow(()->new ItemNotFoundException("vehcile not found"));
+        else if(payload.getVehicle()!=null){
+            Vehicle dbPayload = modelMapper.map(payload.getVehicle(), Vehicle.class);
+            vehicle = vehicleService.addVehicle(dbPayload);
+        }
+        else{
+            throw new BadDataException("vehicle data is needed");
+        }
+        RegisterClientBookingCommand command = RegisterClientBookingCommand.builder()
+                .bookingId(uniqueBookingId)
+                .clientId(client.getId())
+                .bookingStatus(BookingStatus.QUEUED.toString())
+                .dateCreated(LocalDateTime.now())
+                .vehicleId(vehicle.getId())
+                .description(payload.getDetailDescription())
+                .priority(payload.getPriority()==null? Priority.NEXT_BUSINESS_DAY.toString(): payload.getPriority().toString()) //should default to next business day
+                .serviceType(payload.getServiceType().toString())
+                .build();
+        return ResponseEntity.ok(command);
     }
 
     @GetMapping("/my-bookings")

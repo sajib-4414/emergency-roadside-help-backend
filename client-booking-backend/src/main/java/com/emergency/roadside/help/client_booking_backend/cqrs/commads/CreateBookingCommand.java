@@ -23,7 +23,7 @@ public class CreateBookingCommand {
 
     private String serviceType;
 
-    private Long vehicle;
+    private Long vehicleId;
 
     private String description;
 

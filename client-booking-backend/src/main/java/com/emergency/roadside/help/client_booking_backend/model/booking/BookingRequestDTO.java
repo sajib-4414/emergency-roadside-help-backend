@@ -4,6 +4,8 @@ import com.emergency.roadside.help.client_booking_backend.model.vehicle.VehicleD
 import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -11,8 +13,6 @@ import java.time.LocalDateTime;
 @Data
 public class BookingRequestDTO {
 
-
-    private LocalDateTime dateCreated;
 
     //client can either send a vehcile which was created before or a new vehcile
     private Long vehicleId;
@@ -22,8 +22,10 @@ public class BookingRequestDTO {
     @Enumerated(EnumType.STRING)
     private Priority priority;
 
+    @NotEmpty
     private String address;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     private ServiceType serviceType;
 

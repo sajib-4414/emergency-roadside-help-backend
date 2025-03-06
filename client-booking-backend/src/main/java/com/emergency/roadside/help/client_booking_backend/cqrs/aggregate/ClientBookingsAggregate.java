@@ -4,11 +4,13 @@ import com.emergency.roadside.help.client_booking_backend.configs.exceptions.Boo
 import com.emergency.roadside.help.client_booking_backend.configs.exceptions.ClientHasActiveBookingsException;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.RegisterClientBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.events.ClientBookingRegisteredEvent;
+import com.fasterxml.jackson.databind.util.BeanUtil;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.spring.stereotype.Aggregate;
+import org.springframework.beans.BeanUtils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,7 +33,10 @@ public class ClientBookingsAggregate {
         }
 
         //If all good persist to eventstore DB
-        AggregateLifecycle.apply(new ClientBookingRegisteredEvent(command.getClientId(), command.getBookingId()));
+        ClientBookingRegisteredEvent event = new ClientBookingRegisteredEvent();
+        BeanUtils.copyProperties(command,event);
+        AggregateLifecycle.apply(event);
+        //this is going to eventsource handler, event handler, saga event handler
 
     }
 
