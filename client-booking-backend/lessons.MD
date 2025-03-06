@@ -36,3 +36,7 @@ If the command is sent directly from an API controller, you can catch the except
 Option 2: Catch the Exception in the Saga
 If the command is sent from a Saga, you should catch the exception in the Saga and trigger compensating actions.
 
+## Reset axon DB
+goto axon dashboard->cotnext->delete context(with data).
+now u will see spring boot cannot connect anymore, so create a context again.
+for free tier the cotnext name is always default

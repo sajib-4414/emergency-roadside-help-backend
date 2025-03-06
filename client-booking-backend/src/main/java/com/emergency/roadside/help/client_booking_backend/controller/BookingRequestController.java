@@ -14,6 +14,7 @@ import com.emergency.roadside.help.common_module.exceptions.customexceptions.Bad
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AllArgsConstructor;
+import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -35,9 +36,11 @@ public class BookingRequestController {
     private final VehicleRepository vehicleRepository;
     private final VehicleService vehicleService;
     private final ModelMapper modelMapper;
+    private CommandGateway commandGateway;
 
     @PostMapping
     public ResponseEntity<BookingRequest> createBooking(@Validated @RequestBody BookingRequestDTO payload) {
+
         BookingRequest createdBooking = bookingRequestService.createBooking(payload);
         return ResponseEntity.ok(createdBooking);
     }
@@ -58,17 +61,26 @@ public class BookingRequestController {
         else{
             throw new BadDataException("vehicle data is needed");
         }
-        RegisterClientBookingCommand command = RegisterClientBookingCommand.builder()
-                .bookingId(uniqueBookingId)
-                .clientId(client.getId())
-                .bookingStatus(BookingStatus.QUEUED.toString())
-                .dateCreated(LocalDateTime.now())
-                .vehicleId(vehicle.getId())
-                .description(payload.getDetailDescription())
-                .priority(payload.getPriority()==null? Priority.NEXT_BUSINESS_DAY.toString(): payload.getPriority().toString()) //should default to next business day
-                .serviceType(payload.getServiceType().toString())
-                .build();
-        return ResponseEntity.ok(command);
+        try{
+            RegisterClientBookingCommand command = RegisterClientBookingCommand.builder()
+                    .bookingId(uniqueBookingId)
+                    .clientId(client.getId())
+                    .bookingStatus(BookingStatus.QUEUED.toString())
+                    .dateCreated(LocalDateTime.now())
+                    .vehicleId(vehicle.getId())
+                    .description(payload.getDetailDescription())
+                    .priority(payload.getPriority()==null? Priority.NEXT_BUSINESS_DAY.toString(): payload.getPriority().toString()) //should default to next business day
+                    .serviceType(payload.getServiceType().toString())
+                    .build();
+            commandGateway.sendAndWait(command);
+            return ResponseEntity.ok(command);
+        } catch (Exception e) {
+            System.out.println("exception happened"+e.getMessage());
+            System.out.println(e.getStackTrace());
+            throw new BadDataException("Client already has a booking in progress");
+        }
+
+
     }
 
     @GetMapping("/my-bookings")

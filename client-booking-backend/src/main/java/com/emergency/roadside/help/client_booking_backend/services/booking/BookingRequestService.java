@@ -64,6 +64,7 @@ public class BookingRequestService {
         bookingRequest.setRequestedBy(client);
       //  log.info("booking request is "+bookingRequest);
         bookingRequest.setId(null);
+        bookingRequest.setDateCreated(LocalDateTime.now());
         bookingRequest.setStatus(BookingStatus.CREATED);
         bookingRequest = bookingRequestRepository.save(bookingRequest);
         return bookingRequest;
