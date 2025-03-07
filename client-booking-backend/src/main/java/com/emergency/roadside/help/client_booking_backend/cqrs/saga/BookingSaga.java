@@ -90,6 +90,7 @@ the booking process, not the client.
 
             //FOR TESTING, we are finishing the saga here
 
+
         } catch (Exception e) {
 
 //            sendBookingCreatingFailureCompensatingCommand(event)
