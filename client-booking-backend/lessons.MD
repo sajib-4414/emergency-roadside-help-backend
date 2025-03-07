@@ -40,3 +40,32 @@ If the command is sent from a Saga, you should catch the exception in the Saga a
 goto axon dashboard->cotnext->delete context(with data).
 now u will see spring boot cannot connect anymore, so create a context again.
 for free tier the cotnext name is always default
+
+## if you are getting sequence error
+this happens if you use a field as aggregate id, and you keep creating commandss with 
+same aggregate id. for example I have client aggregate, where client id is the target aggregate field.
+so when i was requesting for booking with a single client, then axon was seeing its the same aggregate(based on id),
+and some previous events, commands were having issues, not properly handled. so axon was expecting the previous sequence id, up until 
+same aggregate is processed, but due to error, some events were missed, so i was getting sequence error.
+
+One way is to just delete the context(event store), then everyting in the 3 tables used by axon
+assocition_value_entry, saga_entryu, token_entry. then everything was resetted.
+the sql tables contains some pointer to what was last processed sequence number or something.
+if you mess up in development, u can delete those with context, and restart again everything.
+
+But the best approach is, from axon community comments, dont design system like this, where
+u will keep getting aggregates but with same aggreagate id. having a new unique aggreagate id
+(like booking id, where each booking is unique) is the best usage of this aggreagate.
+
+**More comments from claude**
+The problem you described is a common issue when using a non-unique identifier as the aggregate ID. In your case, using the client ID means all operations for that client affect the same aggregate instance. This creates problems because:
+
+- Multiple concurrent commands targeting the same client ID compete for the same aggregate
+- If errors occur during event processing, the expected sequence gets disrupted
+- The aggregate's event store gets polluted with unrelated events (bookings) that just happen to share the same client ID
+
+Regarding the token: The token_entry table stores tracking tokens for event processors. These tokens track which events have been processed by each processor, 
+essentially acting as offsets or bookmarks in the event stream. They help Axon know where to resume processing after a restart.
+
+## if you are getting xstream serialization error after using command gateway
+use transient and autowired command gateway. it happened in the saga class, using this solved the problem

@@ -65,12 +65,13 @@ public class BookingRequestController {
             RegisterClientBookingCommand command = RegisterClientBookingCommand.builder()
                     .bookingId(uniqueBookingId)
                     .clientId(client.getId())
-                    .bookingStatus(BookingStatus.QUEUED.toString())
+                    .status(BookingStatus.QUEUED)
                     .dateCreated(LocalDateTime.now())
                     .vehicleId(vehicle.getId())
+                    .address(payload.getAddress())
                     .description(payload.getDetailDescription())
-                    .priority(payload.getPriority()==null? Priority.NEXT_BUSINESS_DAY.toString(): payload.getPriority().toString()) //should default to next business day
-                    .serviceType(payload.getServiceType().toString())
+                    .priority(payload.getPriority()==null? Priority.NEXT_BUSINESS_DAY: payload.getPriority()) //should default to next business day
+                    .serviceType(payload.getServiceType())
                     .build();
             commandGateway.sendAndWait(command);
             return ResponseEntity.ok(command);

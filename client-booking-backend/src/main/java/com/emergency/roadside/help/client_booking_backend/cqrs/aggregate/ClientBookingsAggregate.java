@@ -41,13 +41,14 @@ public class ClientBookingsAggregate {
 @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
     public void handleEvent(RegisterClientBookingCommand command) {
         /*Validation Stage*/
-        // Check if client already has active bookings
-        if (!this.activeBookingIds.isEmpty()) {
-            throw new ClientHasActiveBookingsException("Client already has active bookings");
-        }
-        if (this.activeBookingIds.contains(command.getBookingId())) {
-            throw new BookingAlreadyExists("Client already has active bookings");
-        }
+//         Check if client already has active bookings
+    //will put this back on, when i have complete mechanism of removing active booking
+//        if (!this.activeBookingIds.isEmpty()) {
+//            throw new ClientHasActiveBookingsException("Client already has active bookings");
+//        }
+//        if (this.activeBookingIds.contains(command.getBookingId())) {
+//            throw new BookingAlreadyExists("Client already has active bookings");
+//        }
 
         //If all good persist to eventstore DB
         ClientBookingRegisteredEvent event = new ClientBookingRegisteredEvent();
@@ -59,35 +60,19 @@ public class ClientBookingsAggregate {
     }
 
 
-//    @CommandHandler
-//    public void handle(RegisterClientBookingCommand command) {
-//        log.info("Handling command for existing aggregate with clientId: {}", command.getClientId());
-//
-//        // Validation for existing aggregate
-//        if (activeBookingIds.contains(command.getBookingId())) {
-//            throw new BookingAlreadyExists("Booking ID already exists: " + command.getBookingId());
-//        }
-//
-//        // Create and apply event
-//        ClientBookingRegisteredEvent event = new ClientBookingRegisteredEvent();
-//        BeanUtils.copyProperties(command, event);
-//        AggregateLifecycle.apply(event);
-//    }
-
-
     //to update the event on eventstore for replaying
     @EventSourcingHandler
     public void onClientBookingRegisteredEvent(ClientBookingRegisteredEvent event){
 
-        if(this.clientId !=null)
-            System.out.println("aggreagate exists with this client id="+this.clientId);
+//        if(this.clientId !=null)
+//            System.out.println("aggreagate exists with this client id="+this.clientId);
 
-        System.out.println("now hashset before is "+this.activeBookingIds);
+//        System.out.println("now hashset before is "+this.activeBookingIds);
         try{
             this.clientId = event.getClientId();
             this.activeBookingIds.add(event.getBookingId());
 
-            System.out.println("now hashset is"+this.activeBookingIds);
+//            System.out.println("now hashset is"+this.activeBookingIds);
         }catch (Exception exception){
             System.out.println("error happened here"+exception.getMessage());
         }

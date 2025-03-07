@@ -6,10 +6,12 @@ import com.emergency.roadside.help.client_booking_backend.model.booking.BookingR
 import com.emergency.roadside.help.client_booking_backend.model.client.ClientRepository;
 import com.emergency.roadside.help.client_booking_backend.model.vehicle.VehicleRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @AllArgsConstructor
 public class BookingEventHandler {
@@ -25,6 +27,9 @@ public class BookingEventHandler {
         BeanUtils.copyProperties(event,bookingRequest);
         bookingRequest.setRequestedBy(clientRepository.findById(event.getClientId()).get());//we should already have a valid client id here
         bookingRequest.setVehicle(vehicleRepository.findById(event.getVehicleId()).get()); //we should aready have a valid vehicle id here
+        log.info("printing the object before persisting....");
+        log.info(bookingRequest.toString());
+        log.info("status is"+bookingRequest.getStatus());
         bookingRequestRepository.save(bookingRequest);
 
     }

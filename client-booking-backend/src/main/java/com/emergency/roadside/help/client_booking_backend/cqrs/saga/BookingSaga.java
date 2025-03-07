@@ -13,13 +13,18 @@ import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.spring.stereotype.Saga;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Saga
 @Slf4j
 @AllArgsConstructor
 @NoArgsConstructor
 public class BookingSaga {
-    private  CommandGateway commandGateway;
+
+    //must use autowired. Cosntructor injection does not work
+    //must use transient without this, serialization error occurs
+    @Autowired
+    private transient CommandGateway commandGateway;
     private  QueryGateway queryGateway;
 
     /*
@@ -50,13 +55,14 @@ the booking process, not the client.
             CreateBookingCommand command = CreateBookingCommand
                     .builder()
                     .bookingId(event.getBookingId())
-                    .bookingStatus(BookingStatus.CREATED.toString()) //now booking is in created state
+                    .status(event.getStatus()) //now booking is in queued state
                     .clientId(event.getClientId())
                     .dateCreated(event.getDateCreated())
                     .description(event.getDescription())
                     .priority(event.getPriority())
                     .serviceType(event.getServiceType())
                     .vehicleId(event.getVehicleId())
+                    .address(event.getAddress())
                     .build();
             commandGateway.sendAndWait(command);
         } catch (Exception e) {

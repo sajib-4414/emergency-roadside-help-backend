@@ -3,6 +3,9 @@ package com.emergency.roadside.help.client_booking_backend.cqrs.aggregate;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.events.BookingCreatedEvent;
 import com.emergency.roadside.help.client_booking_backend.cqrs.events.ClientBookingRegisteredEvent;
+import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatus;
+import com.emergency.roadside.help.client_booking_backend.model.booking.Priority;
+import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.BadDataException;
 import io.lettuce.core.dynamic.annotation.Command;
 import lombok.NoArgsConstructor;
@@ -28,17 +31,19 @@ public class BookingAggregate {
 
     private Long clientId;
 
-    private String bookingStatus;
+    private BookingStatus status;
 
-    private String serviceType;
+    private ServiceType serviceType;
 
     private Long vehicleId;
 
     private String description;
 
-    private String priority;
+    private Priority priority;
 
     private LocalDateTime dateCreated;
+
+    private String address;
 
 
     @CommandHandler
@@ -55,6 +60,7 @@ public class BookingAggregate {
         //if all good persist to event db that booking created
         BookingCreatedEvent event = BookingCreatedEvent.builder().build();
         BeanUtils.copyProperties(command,event );
+        event.setStatus(BookingStatus.CREATED);
         AggregateLifecycle.apply(event);
     }
 
@@ -63,11 +69,12 @@ public class BookingAggregate {
     public void onBookingCreatedEvent(BookingCreatedEvent event){
         this.bookingId = event.getBookingId();
         this.clientId = event.getClientId();
-        this.bookingStatus = event.getBookingStatus();
+        this.status = event.getStatus();
         this.serviceType = event.getServiceType();
         this.vehicleId = event.getVehicleId();
         this.description = event.getDescription();
         this.priority = event.getPriority();
         this.dateCreated = event.getDateCreated();
+        this.address = event.getAddress();
     }
 }

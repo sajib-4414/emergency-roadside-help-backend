@@ -1,5 +1,8 @@
 package com.emergency.roadside.help.client_booking_backend.cqrs.commads;
 
+import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatus;
+import com.emergency.roadside.help.client_booking_backend.model.booking.Priority;
+import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import lombok.Builder;
 import lombok.Data;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
@@ -15,15 +18,17 @@ public class RegisterClientBookingCommand {
     @TargetAggregateIdentifier
     private Long clientId;
 
-    private String bookingStatus;
+    private BookingStatus status;
 
-    private String serviceType;
+    private ServiceType serviceType;
 
     private Long vehicleId;
 
     private String description;
 
-    private String priority;
+    private Priority priority;
 
     private LocalDateTime dateCreated;
+
+    private String address;
 }
