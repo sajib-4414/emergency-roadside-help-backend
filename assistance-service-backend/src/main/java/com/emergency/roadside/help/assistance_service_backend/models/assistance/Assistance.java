@@ -1,5 +1,6 @@
 package com.emergency.roadside.help.assistance_service_backend.models.assistance;
 
+import com.emergency.roadside.help.common_module.commonmodels.AssistanceStatus;
 import com.emergency.roadside.help.common_module.commonmodels.BaseEntity;
 import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import jakarta.persistence.*;
@@ -20,18 +21,21 @@ import java.time.LocalDateTime;
 //cannot be deleted either
 public class Assistance extends BaseEntity {
 
+    @Column(name = "assistance_id",unique = true)
+    private String assistanceId;
+
     @Column(name = "booking_id", nullable = false)
-    private Long bookingId;
+    private String bookingId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "service_type", nullable = false)
     private ServiceType serviceType;
 
     @Column(name = "start_time", nullable = false)
-    private LocalDateTime startTime;
+    private LocalDateTime startTime;//it means when responder started the assistance, by calling the api
 
     @Column(name = "end_time")
-    private LocalDateTime endTime;
+    private LocalDateTime endTime;//it means when responder ended the assistance, by calling the api
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -40,7 +44,7 @@ public class Assistance extends BaseEntity {
     @Column(name = "responder_id", nullable = false)
     private Long responderId;
 
-    @Column(name = "responder_name", nullable = false)
+    @Column(name = "responder_name", nullable = true)
     private String responderName;
 
     @Column(name = "location", nullable = false)

@@ -1,6 +1,5 @@
 package com.emergency.roadside.help.client_booking_backend.controller;
 
-import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.RegisterClientBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.model.booking.*;
 import com.emergency.roadside.help.client_booking_backend.model.client.Client;
@@ -10,9 +9,9 @@ import com.emergency.roadside.help.client_booking_backend.model.vehicle.Vehicle;
 import com.emergency.roadside.help.client_booking_backend.model.vehicle.VehicleRepository;
 import com.emergency.roadside.help.client_booking_backend.services.booking.BookingRequestService;
 import com.emergency.roadside.help.client_booking_backend.services.vehicle.VehicleService;
+import com.emergency.roadside.help.common_module.commonmodels.Priority;
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.BadDataException;
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AllArgsConstructor;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.modelmapper.ModelMapper;

@@ -1,4 +1,4 @@
-package com.emergency.roadside.help.assistance_service_backend.models.assistance;
+package com.emergency.roadside.help.common_module.commonmodels;
 
 public enum AssistanceStatus {
     RESPONDER_ACCEPTED,

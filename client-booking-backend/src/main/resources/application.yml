@@ -35,7 +35,9 @@ spring:
       ddl-auto: validate
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-
+axon:
+  axonserver:
+    clientId: Client Booking Backend
 server:
   port: 9091
 

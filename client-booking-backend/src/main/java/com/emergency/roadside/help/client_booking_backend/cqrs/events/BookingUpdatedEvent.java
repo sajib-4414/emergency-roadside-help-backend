@@ -14,20 +14,17 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientBookingRegisteredEvent {
-
-    private Long clientId;
+public class BookingUpdatedEvent {
     private String bookingId;
-    private ServiceType serviceType;
+
     private BookingStatus status;
 
-    private Long vehicleId;
+    private String responderName;
 
-    private String description;
+    private Long responderId;
 
-    private Priority priority;
-
-    private LocalDateTime dateCreated;
+    private ServiceType serviceType;
 
     private String address;
+
 }

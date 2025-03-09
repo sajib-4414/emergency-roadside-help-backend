@@ -4,6 +4,7 @@ package com.emergency.roadside.help.client_booking_backend.model.booking;
 import com.emergency.roadside.help.client_booking_backend.model.client.Client;
 import com.emergency.roadside.help.client_booking_backend.model.vehicle.Vehicle;
 import com.emergency.roadside.help.common_module.commonmodels.BaseEntity;
+import com.emergency.roadside.help.common_module.commonmodels.Priority;
 import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @Data
 public class BookingRequest extends BaseEntity {
 
-    @Column(name = "booking_id")
+    @Column(name = "booking_id", unique = true)
     private String bookingId;
 
     @ManyToOne

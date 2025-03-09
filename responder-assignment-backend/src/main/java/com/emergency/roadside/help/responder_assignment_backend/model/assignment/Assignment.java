@@ -1,7 +1,8 @@
 package com.emergency.roadside.help.responder_assignment_backend.model.assignment;
 
+import com.emergency.roadside.help.common_module.commonmodels.AssignStatus;
+import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import com.emergency.roadside.help.responder_assignment_backend.model.BaseEntity;
-import com.emergency.roadside.help.responder_assignment_backend.model.respondersupport.ServiceType;
 import com.emergency.roadside.help.responder_assignment_backend.model.responder.Responder;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,9 @@ public class Assignment extends BaseEntity {
     //starttime -> localdatetime cannot be null
     //endtime ->localendtime, nullable
     //assignementNotes
+    @Column(name = "assignmentId",unique = true,nullable = false)
+    private String assignmentId;
+
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "responder_id", nullable = false)
     private Responder responder;
@@ -38,7 +42,7 @@ public class Assignment extends BaseEntity {
     private AssignStatus assignStatus; // Enum: RESERVED, ASSIGNED, CANCELLED
 
     @Column(name = "booking_id", nullable = false)
-    private Long bookingId;
+    private String bookingId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "service_type", nullable = false)

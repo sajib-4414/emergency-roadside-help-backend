@@ -69,3 +69,108 @@ essentially acting as offsets or bookmarks in the event stream. They help Axon k
 
 ## if you are getting xstream serialization error after using command gateway
 use transient and autowired command gateway. it happened in the saga class, using this solved the problem
+
+## Data duplication in microservice
+so first i designed with as minimal data duplication as possible, for example assignment
+in the assignment service, and booking in the booking service has many data common like address
+client, booking creation date. i can copy actually all data, but there will be lot of duplicaiton.
+i kept booking id in the assignment service, assignment model, thought that frotnend, if need
+further info, will call bookign service. however later i saw that frotnend for some info might need
+to call backend a lot, i mean everytime calling assignment, then again booking. so i duplicated some
+more fields, like which address was it, who is the client.
+I can tell this in storytelling that when designing mciroservices with event driven, i faced this issue
+a lot, i can tlel in the context of other projects like ticket booking, elearning
+
+## individual microservice e aggreagate fields must be string
+If we are in booking microservice, there will be booking aggraate, wehre aggregate identifier
+is bookingId, this should highly be recommended as string. 
+one reason i found is, till the event is not being persisted as database we dont have a
+Long/integer primary key id, but once the booking is creatd in eventstore, we should assume that
+our write database has the event, and asyncronously the read database will also have the booking.
+so what we do is, when we write asyncrhonously we still use the same booking id(string) to find a booking.
+that way event's copy of booking and read model's copy of booking is same.
+
+same in assignment mciroservice, the assignment id should be string,
+forget about db id, that will be still there.
+
+## command hanlders are inherently transactional
+```declarative
+@CommandHandler
+    public AssignmentAggregate(FindResponderCommand command, ResponderRepository responderRepository){
+
+        try{
+            //validate the command before storing it in eventstore, which is primary write DB
+            //check things like if status is good, priority is good, if applicable
+            // Check if the aggregate already exists, handle it in saga
+            //this check
+            if(this.assignStatus == AssignStatus.ASSIGNED){
+                throw new IllegalStateException("Order already assigned");
+            }
+            //read the database to see who is available, see the avaiablity, city etc.
+            //for simplicity lets assume we give to the first driver, and we keep assigning, we are not checking if someone is free
+
+            Responder responder = responderRepository.findById(1L).orElseThrow(()->new ItemNotFoundException("Responder not found"));
+            String uniqueBookingId = UUID.randomUUID().toString();
+
+            //if all good persist to event db that booking created
+            ResponderReservedAndNotifiedEvent event = ResponderReservedAndNotifiedEvent
+                    .builder()
+                    .bookingId(command.getBookingId())
+                    .description(command.getDescription())
+                    .priority(command.getPriority())
+                    .assignStatus(AssignStatus.RESERVED)
+                    .startTime(LocalDateTime.now())
+                    .endTime(null)
+                    .responderId(responder.getId())
+                    .serviceType(command.getServiceType())
+                    .build();
+            AggregateLifecycle.apply(event);
+            log.info("just dispatched the ResponderReservedAndNotifiedEvent as soon as i reserved a responder in the responder service");
+        } catch (ItemNotFoundException e) {
+            log.error("driver not found in command handler of responder microservice");
+            log.info("sending event that booking cancelled");
+            ResponderNotFoundEvent responderNotFoundEvent = ResponderNotFoundEvent
+                    .builder()
+                    .bookingId(command.getBookingId())
+                    .build();
+            AggregateLifecycle.apply(responderNotFoundEvent);
+
+        }
+```
+this is transactional
+
+
+### Aggregate not found error: how to solve
+
+for any aggreagate in the microservice often u need to make the first command handler constructor
+a cosntructor returning the aggregate, sometime if you define first command with other name
+with createpolicy `@CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)`, works
+but often does not.
+
+without this u will see error, aggregate does not exist.
+so what happens is the first command handlder creates the aggregator, this creats the aggreagator with
+sequence number zero(this sequence is indside the event db, only you can query with axon api endpoint to see the sequnece number)
+then when you add more command hanlder, each command handler is applying events, and with those u
+update the aggtreagate with event sourcing handler, they incrtement the sequence number, this is to track how many
+events happened with this aggregate.
+
+## event r command er field gula bar bar update kora lage
+next microservice er ki lagbe, but saga handler ki korbe, ki info lagbe etar upore vitti kore
+bar bar update kora lage event, command. eta ekta common challange
+
+
+### saga korle koi theke koi, fail hoile koi theke koi eta onek complex
+ejonno diagram eke dhore dhore age piche jaya debug kora lage
+
+## individual mciroservice's aggegate class's identifier must be different from other.
+although they are relating to same booking flow, but aggreagate is different in each microservice.
+otherwise you will get error that sequence number error, expecting a forward number(like 1 but gttig 0)
+it means the second microservice is getting some same id as aggregate field, like another microservice(who is comming this second microservice)
+when it gets the same id, it tries to construct a aggreater as new with sequence starting from zero.
+but axon is seeing aggregate already exists (created by other microservice)  where sequence is zero, now sequence can be only incrememnted to 1,2,3 as more events come and event source handler is updating the aggregate
+
+for example
+for the same booking
+in booking microservice: booking aggregate(aggegate identifier booking id)
+in assignment mciroservice: assignment aggregat(aggegate identifier assignment id)
+in assistance microservice: assistance aggregat(aggegate identifier assistance id)

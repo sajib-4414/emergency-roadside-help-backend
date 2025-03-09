@@ -21,12 +21,33 @@ public class BookingEventHandler {
 
     @EventHandler
     public void onBookingCreatedEvent(BookingCreatedEvent event){
+        //ensure this create is fired only if booking does not exist
+        BookingRequest br = bookingRequestRepository.findByBookingId(event.getBookingId());
+        if(br != null) {
+            log.info("booking was already created before with booking id"+event.getBookingId());
+            log.info("skipping persisting to db");
+            return;
+        }
+
         System.out.println("EventHandler to write in DB received BookingCreatedEvent command ");
         System.out.println("Event details: " + event); // Log the event object
         BookingRequest bookingRequest = new BookingRequest();
         BeanUtils.copyProperties(event,bookingRequest);
         bookingRequest.setRequestedBy(clientRepository.findById(event.getClientId()).get());//we should already have a valid client id here
         bookingRequest.setVehicle(vehicleRepository.findById(event.getVehicleId()).get()); //we should aready have a valid vehicle id here
+        log.info("printing the object before persisting....");
+        log.info(bookingRequest.toString());
+        log.info("status is"+bookingRequest.getStatus());
+        bookingRequestRepository.save(bookingRequest);
+
+    }
+
+    @EventHandler
+    public void onBookingUpdatedEvent(BookingUpdatedEvent event){
+        System.out.println("EventHandler to write in DB received BookingUpdatedEvent command ");
+        System.out.println("Event details: " + event); // Log the event object
+        BookingRequest bookingRequest = bookingRequestRepository.findByBookingId(event.getBookingId());
+        bookingRequest.setStatus(event.getStatus());
         log.info("printing the object before persisting....");
         log.info(bookingRequest.toString());
         log.info("status is"+bookingRequest.getStatus());
