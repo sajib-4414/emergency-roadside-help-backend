@@ -14,7 +14,14 @@ public class LocalDateTimeDeserializer2 implements JsonDeserializer< LocalDateTi
     @Override
     public LocalDateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
             throws JsonParseException {
-        return LocalDateTime.parse(json.getAsString(),
+        String dateString = json.getAsString();
+        if (dateString.contains(".")) {
+            dateString = dateString.substring(0, dateString.indexOf("."));
+        }
+
+        // ✅ Now parse without milliseconds
+        return LocalDateTime.parse(dateString,
                 DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss").withLocale(Locale.ENGLISH));
+
     }
 }
