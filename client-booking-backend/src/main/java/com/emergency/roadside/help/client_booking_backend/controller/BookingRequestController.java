@@ -106,6 +106,11 @@ public class BookingRequestController {
         BookingStatusResponse bookingStatus = bookingRequestService.getBookingByIdFromCacheOrDB(id);
         return ResponseEntity.ok(bookingStatus);
     }
+    @GetMapping("/booking-id/{id}")
+    public ResponseEntity<BookingStatusResponse> getBookingDetailsByBookingId(@PathVariable String bookingId) throws IOException {
+        BookingStatusResponse bookingStatus = bookingRequestService.getBookingByIdFromCacheOrDB(id);
+        return ResponseEntity.ok(bookingStatus);
+    }
 
 }
 
