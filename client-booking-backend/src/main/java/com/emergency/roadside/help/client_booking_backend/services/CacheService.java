@@ -25,9 +25,9 @@ public class CacheService {
         return gson;
     }
 
-    public Optional<BookingStatusResponse> getBookingFromCache(Long id){
+    public Optional<BookingStatusResponse> getBookingFromCache(String bookingId){
         Cache cache = cacheManager.getCache("booking");
-        Cache.ValueWrapper valueWrapper = cache.get(id);
+        Cache.ValueWrapper valueWrapper = cache.get(bookingId);
         if (valueWrapper == null)
             return Optional.empty();
         else{
@@ -36,12 +36,14 @@ public class CacheService {
             BookingStatusResponse bookingStatus = getCustomGson().fromJson(getCustomGson().toJson(cachedValue), BookingStatusResponse.class);
 
             //putting again to reset TTL
-            cache.put(id,bookingStatus);
+            cache.put(bookingId,bookingStatus);
             return Optional.ofNullable(bookingStatus);
         }
     }
+
     public void putBookingToCache(BookingStatusResponse bookingStatusResponse){
         Cache cache = cacheManager.getCache("booking");
-        cache.put(bookingStatusResponse.getId(),bookingStatusResponse);
+        cache.put(bookingStatusResponse.getBookingId(),bookingStatusResponse);
     }
+
 }

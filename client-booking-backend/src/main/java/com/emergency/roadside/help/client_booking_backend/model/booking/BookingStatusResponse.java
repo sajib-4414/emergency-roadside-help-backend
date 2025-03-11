@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BookingStatusResponse {
+    private String bookingId;
     private Long id;
     private ClientMiniResponse requestedBy;
     private LocalDateTime dateCreated;

@@ -110,16 +110,24 @@ public class BookingRequestService {
 //            unless = "#result == null"      // Don't cache null results
 ////            ,cacheManager = "customManager"
 //    )
-    public BookingStatusResponse getBookingByIdFromCacheOrDB(Long id) throws IOException {
-        BookingStatusResponse bookingStatus = cacheService.getBookingFromCache(id)
+
+
+    public BookingStatusResponse getBookingByBookingIdFromCacheOrDB(String bookingId) throws IOException {
+        BookingStatusResponse bookingStatus = cacheService.getBookingFromCache(bookingId)
                 .orElseGet(()->{
-                    BookingRequest bookingRequest2 = bookingRequestRepository.findById(id).orElseThrow(()-> new ItemNotFoundException("booking not found"));
+                    BookingRequest bookingRequest2 = bookingRequestRepository.findByBookingId(bookingId);
+                    if (bookingRequest2==null )
+                        new ItemNotFoundException("booking not found");
                     BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest2);
                     cacheService.putBookingToCache(statusResponse);
                     return statusResponse;
                 });
         return bookingStatus;
+    }
 
-
+    public BookingStatusResponse getBookingById(Long id) {
+        BookingRequest bookingRequest2 = bookingRequestRepository.findById(id).orElseThrow(()-> new ItemNotFoundException("booking not found"));
+        BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest2);
+        return statusResponse;
     }
 }

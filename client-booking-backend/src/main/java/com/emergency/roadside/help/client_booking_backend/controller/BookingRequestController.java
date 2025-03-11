@@ -103,12 +103,12 @@ public class BookingRequestController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BookingStatusResponse> getBookingDetails(@PathVariable Long id) throws IOException {
-        BookingStatusResponse bookingStatus = bookingRequestService.getBookingByIdFromCacheOrDB(id);
+        BookingStatusResponse bookingStatus = bookingRequestService.getBookingById(id);
         return ResponseEntity.ok(bookingStatus);
     }
-    @GetMapping("/booking-id/{id}")
+    @GetMapping("/booking-id/{bookingId}")
     public ResponseEntity<BookingStatusResponse> getBookingDetailsByBookingId(@PathVariable String bookingId) throws IOException {
-        BookingStatusResponse bookingStatus = bookingRequestService.getBookingByIdFromCacheOrDB(id);
+        BookingStatusResponse bookingStatus = bookingRequestService.getBookingByBookingIdFromCacheOrDB(bookingId);
         return ResponseEntity.ok(bookingStatus);
     }
 

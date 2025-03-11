@@ -174,3 +174,153 @@ for the same booking
 in booking microservice: booking aggregate(aggegate identifier booking id)
 in assignment mciroservice: assignment aggregat(aggegate identifier assignment id)
 in assistance microservice: assistance aggregat(aggegate identifier assistance id)
+
+
+## idempotency is the key
+dekhsilam tracking event processor er karone, kisu event retry hoto, r event gula jodi erkm hoi je
+createbooking, jekhane db booking create kora hoto, dekhsi je duplicate data dhuke jeto or
+jodi amar unique booking id thake, taile error khaitam je duplicate data dhuktese. then idempotency dhukai
+je jodi ei jinis create hoye thake taile skip this.
+
+## what is subscriptions, types of subscriptions and event processors
+
+In event sourcing systems, subscriptions are mechanisms that allow clients or services to receive notifications about new events as they occur in the event store.
+Here's what subscriptions typically provide:
+
+**Actually ami je event listener diye event gula dekhte pari, listen korte pari, etai subscription**
+
+Real-time updates: Services can subscribe to specific event types or streams and receive events as they're appended to the event store.
+Catch-up capability: When a service starts or reconnects after downtime, it can receive all events it missed since its last checkpoint.
+Filtering options: Most subscription systems let you filter by event type, stream, or other criteria to receive only relevant events.
+Durability guarantees: Subscriptions often provide at-least-once delivery semantics to ensure events are processed even through failures.
+
+this is a sample subscription, which is just event handler
+```java
+// 2. Create a subscription with an event processor for the read model
+@Component
+public class ProductInventoryProjection {
+    private final ProductInventoryRepository repository;
+    
+    @Autowired
+    public ProductInventoryProjection(ProductInventoryRepository repository) {
+        this.repository = repository;
+    }
+    
+    @EventHandler
+    public void on(ProductCreatedEvent event) {
+        repository.save(new ProductInventory(
+            event.getProductId(),
+            event.getName(),
+            event.getInitialStock()
+        ));
+    }
+    
+    @EventHandler
+    public void on(StockAdjustedEvent event) {
+        repository.findById(event.getProductId())
+            .ifPresent(inventory -> {
+                inventory.setStock(inventory.getStock() + event.getAdjustment());
+                repository.save(inventory);
+            });
+    }
+}
+```
+Axon provides two types of event processors for subscriptions:
+
+Subscribing processors: Real-time, direct subscription to the event bus
+Tracking processors: Persistent subscription that tracks position and can catch up after downtime
+
+Subscribing Processors
+Subscribing processors receive events immediately as they're published, working in the same thread that publishes the event.
+Key characteristics:
+
+Real-time event processing (synchronous)
+No persistence of processing state
+Cannot recover missed events after restart
+Simple, with minimal configuration
+
+```java
+@Configuration
+public class EventProcessingConfig {
+    @Bean
+    public EventProcessingConfigurer subscribingProcessorConfig(EventProcessingConfigurer configurer) {
+        // Configure "notificationProcessor" as a subscribing processor
+        return configurer.registerSubscribingEventProcessor("notificationProcessor");
+    }
+}
+
+// A component using the subscribing processor
+@Component
+@ProcessingGroup("notificationProcessor")
+public class NotificationService {
+    
+    private final EmailSender emailSender;
+    
+    public NotificationService(EmailSender emailSender) {
+        this.emailSender = emailSender;
+    }
+    
+    @EventHandler
+    public void on(OrderPlacedEvent event) {
+        // This executes in the same thread that published the event
+        // and happens immediately after the event is published
+        emailSender.sendOrderConfirmation(event.getCustomerEmail(), event.getOrderId());
+    }
+}
+```
+Use case: Ideal for notifications, validations, or other operations that should happen immediately and don't need to be durable or recoverable.
+
+Tracking Processors
+Tracking processors poll for events from the event store, track their position, and can resume processing from where they left off after a restart.
+**If you dont override or specify the event processor, by default axon uses tracking processor, which is more reliable**
+Key characteristics:
+
+Asynchronous event processing
+Maintains processing position (tracks which events have been processed)
+Can recover and catch up after downtime
+Supports parallel processing
+More complex, with configurable options
+
+
+```java
+@Configuration
+public class EventProcessingConfig {
+    @Bean
+    public EventProcessingConfigurer trackingProcessorConfig(EventProcessingConfigurer configurer) {
+        return configurer.registerTrackingEventProcessor("inventoryProcessor",
+                // Configure with 4 threads for parallel processing
+                configuration -> TrackingEventProcessorConfiguration.forParallelProcessing(4)
+                        .andBatchSize(100));
+    }
+}
+
+// A component using the tracking processor
+@Component
+@ProcessingGroup("inventoryProcessor")
+public class InventoryProjection {
+    
+    private final InventoryRepository repository;
+    
+    public InventoryProjection(InventoryRepository repository) {
+        this.repository = repository;
+    }
+    
+    @EventHandler
+    public void on(ProductCreatedEvent event) {
+        // This runs in a separate thread, possibly later than when the event was published
+        repository.save(new InventoryItem(event.getProductId(), event.getInitialStock()));
+    }
+    
+    @EventHandler
+    public void on(StockAdjustedEvent event) {
+        // If the service restarts, it will pick up where it left off
+        // and process all events it missed during downtime
+        repository.findById(event.getProductId())
+                .ifPresent(item -> {
+                    item.setStock(item.getStock() + event.getAdjustment());
+                    repository.save(item);
+                });
+    }
+}
+```
+Use case: Ideal for building read models, maintaining projections, or any process that needs durability and the ability to recover after failures.
