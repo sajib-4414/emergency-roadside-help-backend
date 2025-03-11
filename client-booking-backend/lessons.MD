@@ -78,6 +78,7 @@ i kept booking id in the assignment service, assignment model, thought that frot
 further info, will call bookign service. however later i saw that frotnend for some info might need
 to call backend a lot, i mean everytime calling assignment, then again booking. so i duplicated some
 more fields, like which address was it, who is the client.
+It did happen when i started to do the frotnend.
 I can tell this in storytelling that when designing mciroservices with event driven, i faced this issue
 a lot, i can tlel in the context of other projects like ticket booking, elearning
 

@@ -117,7 +117,7 @@ public class BookingRequestService {
                 .orElseGet(()->{
                     BookingRequest bookingRequest2 = bookingRequestRepository.findByBookingId(bookingId);
                     if (bookingRequest2==null )
-                        new ItemNotFoundException("booking not found");
+                        throw new ItemNotFoundException("booking not found");
                     BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest2);
                     cacheService.putBookingToCache(statusResponse);
                     return statusResponse;
