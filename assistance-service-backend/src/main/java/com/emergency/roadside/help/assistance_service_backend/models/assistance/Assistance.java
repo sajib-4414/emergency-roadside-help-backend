@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -52,5 +53,8 @@ public class Assistance extends BaseEntity {
 
     @Column(name = "estimated_arrival_time")
     private LocalDateTime estimatedArrivalTime;
+
+    @OneToMany(mappedBy = "assistance", cascade = CascadeType.ALL)
+    List<AssistanceItem> assistanceItemList;
 
 }

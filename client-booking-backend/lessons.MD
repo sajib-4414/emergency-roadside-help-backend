@@ -325,3 +325,51 @@ public class InventoryProjection {
 }
 ```
 Use case: Ideal for building read models, maintaining projections, or any process that needs durability and the ability to recover after failures.
+
+
+
+## Challange-> data lost due to event propagation failure
+i see some events were lost somehow, and due to that one microservice has some data of a flow(say like booking), but other microservcie does not have.
+istributed systems like microservices architecture using EDA (Event-Driven Architecture) with Axon Framework, data inconsistency due to lost events is a common challenge. 
+
+Recovery Options
+* You can try to replay -axon provides an endpoint to set the tracking processor's sequence id to the back,
+so axon will replay from that sequence. It involves altertign the sequence with axon's built in method
+
+In Axon, tracking event processors keep track of which events they've processed using tracking tokens. You reset these tokens to force reprocessing:
+As events are replayed, the event handlers in your microservice process them, rebuilding the aggregates and projections.
+
+```java
+@Component
+public class EventReplayService {
+    private final EventProcessingConfiguration eventProcessingConfiguration;
+    
+    @Autowired
+    public EventReplayService(EventProcessingConfiguration eventProcessingConfiguration) {
+        this.eventProcessingConfiguration = eventProcessingConfiguration;
+    }
+    
+    public void replayEvents(String processorName) {
+        eventProcessingConfiguration.resetTokens(processorName);
+    }
+    
+    public void replayEventsFromDate(String processorName, Instant fromDate) {
+        eventProcessingConfiguration.resetTokens(processorName, 
+            streamableMessageSource -> streamableMessageSource.createTokenAt(fromDate));
+    }
+}
+```
+
+
+more suggestions by claude
+* Reconciliation Process: Implement a scheduled reconciliation job that compares data between microservices and identifies discrepancies.
+* Compensating Transactions: Create new events that correct the inconsistency. For example, if a booking exists in one service but not another, create a "BookingRecoveredEvent" that the second service can process.
+
+To prevent further claude suggested
+* Guaranteed Delivery Patterns:
+
+Use a reliable message broker with persistence and acknowledgment mechanisms
+Implement the Outbox Pattern to ensure events are sent even if initial publication fails
+
+* 
+Idempotent Event Handlers: Make your event handlers idempotent so that receiving the same event multiple times doesn't cause issues. So event can be replayed, rebuilt, anything, without causing any problems.
