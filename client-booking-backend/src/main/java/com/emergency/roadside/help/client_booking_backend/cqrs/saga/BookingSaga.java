@@ -25,6 +25,9 @@ import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.concurrent.TimeUnit;
+
+
 @Saga
 @Slf4j
 @AllArgsConstructor
@@ -109,20 +112,22 @@ the booking process, not the client.
                     .serviceType(event.getServiceType())
                     .priority(event.getPriority())
                     .build();
-            commandGateway.sendAndWait(command);
+            commandGateway.sendAndWait(command, 15,TimeUnit.SECONDS
+                    ); // Timeout in milliseconds
 
 
         } catch (Exception e) {
 
-            sendBookingCreatingFailureCompensatingCommand(event);
+            sendResponderServiceFailureCompensatingCommand(event);
         }
 
 
 
     }
 
-    private void sendBookingCreatingFailureCompensatingCommand(BookingCreatedEvent event) {
+    private void sendResponderServiceFailureCompensatingCommand(BookingCreatedEvent event) {
         //send a command to update the aggreagate also
+        log.error("nobody responded to the find responder event");
 
     }
 

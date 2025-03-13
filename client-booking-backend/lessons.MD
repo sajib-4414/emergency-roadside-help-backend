@@ -381,3 +381,9 @@ Idempotent Event Handlers: Make your event handlers idempotent so that receiving
 i will make an endpoint to run all the events of a certain booking aggregate to trigger event and aggregate creeation on other services.
 * will all the commands and event handlers idempotent, while doing this, this is also a practice. This is a great interview story to tell that i debugged event being lost, i replayed and rebuilt the events and aggregates in other microservices. i caught that some events were lost by querying eventstore with query all events by bookingId, from there i saw that some events were missed.
 * i guess i can run a background job to test this automatically, also i guess i can use a tracing tool to find this. have to see these, especially tracing.
+
+### Commands are lost and saga is in orphan state without command error handling
+
+in saga when i am sending a command to next mcirosercice, if i just do send command(which is a syntacic sugar over event )
+and dont handle error with timeout, then if the other mciroservice is down and not getting a command at the moment,
+then even if the other mciroservice who is supposed to receive command, wakes up, will miss this command, then the saga is failed.
