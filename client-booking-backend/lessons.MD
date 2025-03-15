@@ -359,6 +359,10 @@ public class EventReplayService {
     }
 }
 ```
+However replaying all events can do unintended consequence like people get email that order
+conrifmed, order delivered again, for orders which they already received. thats why axon provides a 
+`isReplayed` variable in event handlers to know if right now event is being replayed, you need to have 
+logic to make them idempotentn now, so that event replaying dos not cause any side effects.
 
 
 more suggestions by claude
@@ -370,9 +374,7 @@ To prevent further claude suggested
 
 Use a reliable message broker with persistence and acknowledgment mechanisms
 Implement the Outbox Pattern to ensure events are sent even if initial publication fails
-
-* 
-Idempotent Event Handlers: Make your event handlers idempotent so that receiving the same event multiple times doesn't cause issues. So event can be replayed, rebuilt, anything, without causing any problems.
+* Idempotent Event Handlers: Make your event handlers idempotent so that receiving the same event multiple times doesn't cause issues. So event can be replayed, rebuilt, anything, without causing any problems.
 
 
 **MY NEXT TASKs** 
@@ -382,8 +384,87 @@ i will make an endpoint to run all the events of a certain booking aggregate to 
 * will all the commands and event handlers idempotent, while doing this, this is also a practice. This is a great interview story to tell that i debugged event being lost, i replayed and rebuilt the events and aggregates in other microservices. i caught that some events were lost by querying eventstore with query all events by bookingId, from there i saw that some events were missed.
 * i guess i can run a background job to test this automatically, also i guess i can use a tracing tool to find this. have to see these, especially tracing.
 
-### Commands are lost and saga is in orphan state without command error handling
+## SAGA error Handling
+### Handling Error In Commands:
+Commands are lost and saga is in orphan state without command error handling
 
 in saga when i am sending a command to next mcirosercice, if i just do send command(which is a syntacic sugar over event )
 and dont handle error with timeout, then if the other mciroservice is down and not getting a command at the moment,
 then even if the other mciroservice who is supposed to receive command, wakes up, will miss this command, then the saga is failed.
+
+Here are two problems, 
+-> **commands can be not sent**: maybe the command receiver is down.
+
+1. it can be handled by 
+`commandGateway.sendAndWait(command, 15,TimeUnit.SECONDS);` this is a blocking mechansim, if there is no command
+handler receiving it in 15s, you will get error in the try catch. WHile this is straightforward, but this blocks the thread.
+
+2. a better way is to use the async handler provided in the `commandGateway.send` you can listen to command sending error from here, withot blocking thread
+```
+commandGateway.send(command, (commandMessage, commandResultMessage) -> {
+    if (commandResultMessage.isExceptional()) {
+        Throwable cause = commandResultMessage.exceptionResult();
+        System.err.println("Command failed: " + cause.getMessage());
+        // Log or take action based on the failure
+    } else {
+        System.out.println("Command processed successfully: " + commandResultMessage.getPayload());
+    }
+});
+```
+3. Another thing is sometime if commands are failed, it is ok to retry this command a few more times, we can do that
+with a time delayed execution block. One approach is using CompletableFuture.delayedExecutor
+```
+CompletableFuture.delayedExecutor(10, TimeUnit.SECONDS).execute(() -> {
+        if (!commentRepository.existsById(commentId)) {
+            System.err.println("Comment failed, retrying...");
+            commandGateway.send(new PostCommentCommand(commentId, "Retrying comment"));
+        }
+    });
+  //complete example is in my saga class
+```
+-> **no error in command sending, but response not coming**: To handle this, use deadline manager, and deadline handler
+to have a timeout that if the next response is not coming in 15 minutes say, we do another commad inside our microservice to
+cancel/compensate.
+
+
+### Handling event not coming in Saga with timeout
+
+use deadline manager and deadline handler to have timeout in saga
+
+say if your order payment processed event is not coming in 15 minutes you have to cancel the order,
+to do that, you can use deadline manager to create a deadline, and if deadline is passed and event is not coming
+as response like payment response, then deadline handler will trigger a compensating command
+
+```java
+@StartSaga
+    @SagaEventHandler(associationProperty = "orderId")
+    public void on(OrderCreatedEvent event) {
+        // starting a timer that, upon process  payment command, we must receive the response in 15 minutes
+        deadlineId = deadlineManager.schedule(
+            Duration.ofMinutes(15), 
+            "paymentDeadline", 
+            event.getOrderId()
+        );
+        
+        // Send command to payment service
+        commandGateway.send(new ProcessPaymentCommand(event.getOrderId(), event.getAmount()));
+    }
+    
+//if we do get any event, then we cancel the deadline timer    
+@SagaEventHandler(associationProperty = "orderId")
+public void on(PaymentProcessedEvent event) {
+    // Cancel the deadline since payment was successful
+    deadlineManager.cancelSchedule("paymentDeadline", deadlineId);
+
+    // Continue with order processing
+    commandGateway.send(new ShipOrderCommand(event.getOrderId()));
+}
+
+//if we did not get evetn response and did not cancel the timer, this deadline handler will be invoked
+@DeadlineHandler(deadlineName = "paymentDeadline")
+public void handlePaymentTimeout(String orderId) {
+    // Handle the timeout - compensating transaction
+    commandGateway.send(new CancelOrderCommand(orderId, "Payment timeout"));
+}
+```
+

@@ -8,6 +8,7 @@ import com.emergency.roadside.help.client_booking_backend.model.vehicle.VehicleR
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
@@ -62,5 +63,17 @@ public class BookingEventHandler {
         System.out.println("Event details: " + event); // Log the event object
 
 
+    }
+
+    @EventHandler
+    public void onBookingCancelledDuetoRespUnavailable(BookingCancelledDuetoRespUnavailable event){
+        System.out.println("EventHandler to write in DB received BookingCancelledDuetoRespUnavailable command ");
+        System.out.println("Event details: " + event); // Log the event object
+        BookingRequest bookingRequest = bookingRequestRepository.findByBookingId(event.getBookingId());
+        bookingRequest.setStatus(event.getStatus());
+        log.info("printing the object before persisting....");
+        log.info(bookingRequest.toString());
+        log.info("status is"+bookingRequest.getStatus());
+        bookingRequestRepository.save(bookingRequest);
     }
 }

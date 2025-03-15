@@ -1,7 +1,9 @@
 package com.emergency.roadside.help.client_booking_backend.cqrs.aggregate;
 
+import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CancelBookingDueToResponderServiceUnavailableCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.UpdateBookingWithResponderFoundCommand;
+import com.emergency.roadside.help.client_booking_backend.cqrs.events.BookingCancelledDuetoRespUnavailable;
 import com.emergency.roadside.help.client_booking_backend.cqrs.events.BookingCreatedEvent;
 import com.emergency.roadside.help.client_booking_backend.cqrs.events.BookingUpdatedEvent;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatus;
@@ -97,6 +99,21 @@ public class BookingAggregate {
 
     @EventSourcingHandler
     public void onBookingCreatedEvent(BookingUpdatedEvent event){
+        this.bookingId = event.getBookingId();
+        this.status = event.getStatus();
+    }
+
+    @CommandHandler
+    public void BookingCancellingDueToResponderServiceUnavailable(CancelBookingDueToResponderServiceUnavailableCommand command){
+        BookingCancelledDuetoRespUnavailable event= BookingCancelledDuetoRespUnavailable.builder()
+                .bookingId(command.getBookingId())
+                .status(BookingStatus.RESPONDER_SERVICE_UNAVAILABLE)
+                .build();
+        AggregateLifecycle.apply(event);
+    }
+
+    @EventSourcingHandler
+    public void onBookingCancelledDuetoRespUnavailable(BookingCancelledDuetoRespUnavailable event){
         this.bookingId = event.getBookingId();
         this.status = event.getStatus();
     }

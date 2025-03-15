@@ -1,5 +1,6 @@
 package com.emergency.roadside.help.client_booking_backend.cqrs.saga;
 
+import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CancelBookingDueToResponderServiceUnavailableCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.UpdateBookingWithResponderFoundCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.events.BookingCreatedEvent;
@@ -16,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.deadline.annotation.DeadlineHandler;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
@@ -24,7 +26,13 @@ import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.w3c.dom.stylesheets.LinkStyle;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 
@@ -41,6 +49,7 @@ public class BookingSaga {
     private  QueryGateway queryGateway;
     @Autowired
     private transient BookingRequestRepository bookingRequestRepository;
+    private static final List<Long>  delaySchedule = Arrays.asList(5000L, 10000L, 20000L);
 
     /*
 Why Not Use clientId as the associationProperty?
@@ -104,32 +113,104 @@ the booking process, not the client.
             //by now in eventstore we have written booking in tits db
             //you can do some check with queryhandler, to send some query to relationalDB if  you want.
             //like to see if projection is written, all good to go to next stage of creating the booking
-            //as per deepseek, its not recommended to do a query here to the read db, because readdb is meant to be
+            //as per deepseek, its not recommended to do a query here to the read db, because read
+            // db is updated asyncrhonosuly, you can check other things like if external service data is processed/payment
+            // is processed by extenral service
+            // because readdb is meant to be
             //eventually consistent, but if you still need to be very consistent you can do it.
+
             FindResponderCommand command = FindResponderCommand.builder()
                     .bookingId(event.getBookingId())
                     .description(event.getDescription())
                     .serviceType(event.getServiceType())
                     .priority(event.getPriority())
                     .build();
-            commandGateway.sendAndWait(command, 15,TimeUnit.SECONDS
-                    ); // Timeout in milliseconds
+//            commandGateway.sendAndWait(command, 15,TimeUnit.SECONDS
+//                    ); // Timeout in milliseconds
+            //better way is to have asyncrhonous handler
+
+            //a better way is to try with a retyr command handler, so we try 3 times before doing compensating action
+//            commandGateway.send(command, (originalCommandMessage, commandResultMessage) -> {
+//                if (commandResultMessage.isExceptional()) {
+//                    Throwable cause = commandResultMessage.exceptionResult();
+//                    System.err.println("Command failed: " + cause.getMessage());
+//                    // Log or take action based on the failure
+//                    sendResponderServiceFailureCompensatingCommand(event);
+//                } else {
+//                    System.out.println("Command processed successfully: " + commandResultMessage.getPayload());
+//                }
+//            });
+
+
+            sendFindResponderCommandWithRetry(command, 3);
+
 
 
         } catch (Exception e) {
 
-            sendResponderServiceFailureCompensatingCommand(event);
+            log.error("find responder command creating unexpected error..............");
+            sendResponderServiceFailureCompensatingCommand(event.getBookingId());
         }
 
-
-
     }
 
-    private void sendResponderServiceFailureCompensatingCommand(BookingCreatedEvent event) {
+
+    //we have to overloaded methods,
+    //the first one is called from saga, the second one is called recursively until maxretry is done
+    private void sendFindResponderCommandWithRetry(FindResponderCommand command, int maxRetries){
+        sendFindResponderCommandWithRetry(command, maxRetries, 0 );
+    }
+    private void sendFindResponderCommandWithRetry(FindResponderCommand command, int maxRetries, int currentAttempt)
+    {
+        commandGateway.send(command, (commandMessage, commandResultMessage) -> {
+            if (commandResultMessage.isExceptional()) {
+                Throwable cause = commandResultMessage.exceptionResult();
+                System.err.println("FindResponderCommand  failed (attempt " + (currentAttempt + 1) + "/" + (maxRetries + 1) + "): " + cause.getMessage());
+
+                if (currentAttempt < maxRetries) {
+                    // Calculate the delay for this retry attempt
+                    long delay = currentAttempt < delaySchedule.size() ?
+                            delaySchedule.get(currentAttempt) :
+                            delaySchedule.getLast();
+
+                    System.out.println("Retrying in " + (delay / 1000) + " seconds...");
+
+                    // Schedule the retry with the calculated delay
+                    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+                    executor.schedule(() -> {
+                        sendFindResponderCommandWithRetry(command, maxRetries, currentAttempt + 1);
+                    }, delay, TimeUnit.MILLISECONDS);
+                    executor.shutdown();
+                } else {
+                    System.err.println("Max retry attempts for FindResponderCommand reached. Taking failure action.");
+                    sendResponderServiceFailureCompensatingCommand(command.getBookingId());
+                }
+            } else {
+                System.out.println("Command processed successfully: " + commandResultMessage.getPayload());
+            }
+        });
+    }
+
+    private void sendResponderServiceFailureCompensatingCommand(String bookingId) {
         //send a command to update the aggreagate also
-        log.error("nobody responded to the find responder event");
+        log.error("nobody responded to the find responder command after 4th attempt, will do compensating transaction.....");
 
+        CancelBookingDueToResponderServiceUnavailableCommand command1  = CancelBookingDueToResponderServiceUnavailableCommand.
+                builder()
+                .bookingId(bookingId)
+                .build();
+        commandGateway.send(command1,((commandMessage, commandResultMessage) -> {
+            if (commandResultMessage.isExceptional()) {
+                //error happened again
+            }
+            else{
+                //all good
+
+            }
+        }));
     }
+
+
 
     private void sendClientBookingCancelCommand(ClientBookingRegisteredEvent event) {
         //send a command to update the aggreagate also
