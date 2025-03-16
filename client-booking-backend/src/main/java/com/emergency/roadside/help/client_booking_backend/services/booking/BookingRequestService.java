@@ -27,6 +27,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -99,7 +100,8 @@ public class BookingRequestService {
     public List<BookingRequest> getAllMyBookings() {
         User user = getCurrentUser();
         Client client = clientRepository.findByUser(user).orElseThrow(()->new ItemNotFoundException("client not found"));
-        return bookingRequestRepository.findAllByRequestedBy_Id(client.getId());
+        List<BookingRequest> requests = bookingRequestRepository.findAllByRequestedBy_Id(client.getId(), Sort.by(Sort.Direction.ASC, "dateCreated"));
+        return requests;
     }
 
 
@@ -125,6 +127,8 @@ public class BookingRequestService {
 //                });
 
         BookingRequest bookingRequest2 = bookingRequestRepository.findByBookingId(bookingId);
+        if(bookingRequest2 == null)
+            throw new ItemNotFoundException("Booking not found, try again");
         BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest2);
         return statusResponse;
     }

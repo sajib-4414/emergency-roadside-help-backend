@@ -25,6 +25,11 @@ public class AssignmentEventHandler {
     public void onBookingCreatedEvent(ResponderReservedAndNotifiedEvent event){
         System.out.println("EventHandler to write in DB received ResponderReservedAndNotifiedEvent command ");
         System.out.println("Event details: " + event); // Log the event object
+        if(assignmentRepository.findByAssignmentIdAndBookingId(event.getAssignmentId(),event.getBookingId()).isPresent())
+        {
+            log.info("assignment was already created, skipping creating assignment.....");
+            return;
+        }
         Assignment assignment = Assignment
                 .builder()
                 .assignmentId(event.getAssignmentId())
