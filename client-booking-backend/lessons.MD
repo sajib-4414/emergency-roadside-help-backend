@@ -383,6 +383,16 @@ Implement the Outbox Pattern to ensure events are sent even if initial publicati
 i will make an endpoint to run all the events of a certain booking aggregate to trigger event and aggregate creeation on other services.
 * will all the commands and event handlers idempotent, while doing this, this is also a practice. This is a great interview story to tell that i debugged event being lost, i replayed and rebuilt the events and aggregates in other microservices. i caught that some events were lost by querying eventstore with query all events by bookingId, from there i saw that some events were missed.
 * i guess i can run a background job to test this automatically, also i guess i can use a tracing tool to find this. have to see these, especially tracing.
+* dead letter configuration: https://docs.axoniq.io/axon-framework-reference/4.11/events/event-processors/dead-letter-queue/
+i htink axon does not do dead letter for commands, so have to check that out
+there is another way of dead letter handling: htere is a handler axon gives, try that out too, that is for manual handling of dead letter to some own defined table: https://discuss.axoniq.io/t/dead-letter-error-handling/5769/3
+* update the retry mechanism with axon built in, axon built in - only retry with exponential backoff for transient errros defined in axon dictionary, all others it treats as non retryable, have to customize if i want
+* add open telemetry+jaeger+axon: somebody said axon has built in support, so just use the agent and use open telemetry
+https://opentelemetry.io/docs/languages/java/getting-started/
+https://docs.axoniq.io/axon-framework-reference/4.10/monitoring/tracing/?utm_source=chatgpt.com
+someone in axon community says, due to built in support he only needed to add a otel service name something like this property in all microservixes, it was enough, have to check that as well.
+* do the assignment update saga as well.
+
 
 ## SAGA error Handling
 ### Handling Error In Commands:
@@ -467,4 +477,6 @@ public void handlePaymentTimeout(String orderId) {
     commandGateway.send(new CancelOrderCommand(orderId, "Payment timeout"));
 }
 ```
+
+
 
