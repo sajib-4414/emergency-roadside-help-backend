@@ -478,5 +478,13 @@ public void handlePaymentTimeout(String orderId) {
 }
 ```
 
-
-
+**Axon do dual write with event publishing, which introduces issue that GET call doesnt see data**
+This is similar to shryansh jain said, how listen to yourself dual write solution,
+where instead of write to db, message is put into outbox, then from there by poller, message is published to event bus,
+then from bus, this service listens and write to db. and other service also listens the event now.
+now in the meantime if a get request comes before db is written, there will be no item in DB, so this delayed write issue,
+he said cache can solve it.
+![dual_write_delayed_write_issue.png](dual_write_delayed_write_issue.png)
+https://www.youtube.com/watch?v=QaH7r4V4RmE&ab_channel=Concept%26%26Coding-byShrayansh
+I also planned to solve it by writing to cache first, although for now i am just reqeusting again and again from
+backedn if db item is not created.
