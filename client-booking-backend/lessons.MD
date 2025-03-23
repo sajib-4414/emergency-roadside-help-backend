@@ -422,6 +422,10 @@ CompletableFuture.delayedExecutor(10, TimeUnit.SECONDS).execute(() -> {
     });
   //complete example is in my saga class
 ```
+4. Actually for axon, its better to use the built in retry exector by axon, which retries for transient errrors, with a 
+set maximum retry, and exponential backoff. however if i want to customize that beyond transient errors
+i want to retry, then i have to customize that error handler
+
 -> **no error in command sending, but response not coming**: To handle this, use deadline manager, and deadline handler
 to have a timeout that if the next response is not coming in 15 minutes say, we do another commad inside our microservice to
 cancel/compensate.
