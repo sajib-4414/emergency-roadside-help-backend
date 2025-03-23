@@ -472,3 +472,9 @@ public void handlePaymentTimeout(String orderId) {
 }
 ```
 
+### Handling events failed.
+chatgpt says,
+when an event is listed to in saga, eventsourcing handler, and event handler(for db),
+axon provides a dlq for the events that failed in the event handler with uncaught exception.
+axon does not provide a way to move events to dlq from saga event handler and also event sourcing handler.
+i have to design the system robustly to handle all events from there
