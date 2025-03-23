@@ -383,6 +383,16 @@ Implement the Outbox Pattern to ensure events are sent even if initial publicati
 i will make an endpoint to run all the events of a certain booking aggregate to trigger event and aggregate creeation on other services.
 * will all the commands and event handlers idempotent, while doing this, this is also a practice. This is a great interview story to tell that i debugged event being lost, i replayed and rebuilt the events and aggregates in other microservices. i caught that some events were lost by querying eventstore with query all events by bookingId, from there i saw that some events were missed.
 * i guess i can run a background job to test this automatically, also i guess i can use a tracing tool to find this. have to see these, especially tracing.
+* dead letter configuration: https://docs.axoniq.io/axon-framework-reference/4.11/events/event-processors/dead-letter-queue/
+i htink axon does not do dead letter for commands, so have to check that out
+there is another way of dead letter handling: htere is a handler axon gives, try that out too, that is for manual handling of dead letter to some own defined table: https://discuss.axoniq.io/t/dead-letter-error-handling/5769/3
+* update the retry mechanism with axon built in, axon built in - only retry with exponential backoff for transient errros defined in axon dictionary, all others it treats as non retryable, have to customize if i want
+* add open telemetry+jaeger+axon: somebody said axon has built in support, so just use the agent and use open telemetry
+https://opentelemetry.io/docs/languages/java/getting-started/
+https://docs.axoniq.io/axon-framework-reference/4.10/monitoring/tracing/?utm_source=chatgpt.com
+someone in axon community says, due to built in support he only needed to add a otel service name something like this property in all microservixes, it was enough, have to check that as well.
+* do the assignment update saga as well.
+
 
 ## SAGA error Handling
 ### Handling Error In Commands:
@@ -478,3 +488,56 @@ when an event is listed to in saga, eventsourcing handler, and event handler(for
 axon provides a dlq for the events that failed in the event handler with uncaught exception.
 axon does not provide a way to move events to dlq from saga event handler and also event sourcing handler.
 i have to design the system robustly to handle all events from there
+
+
+i saw in axon iq discussion that, if you dont implement dlq, you can get a listener that is invoked when an event is failed, so you do your own custom intervention.
+also i saw in axon video that if you imeplemetn dlq, you can take jpasequenced dlq configutaiton, which stores the failed events in the dead letter entry table in the database like this
+![img_1.png](img_1.png)
+you can see there is lot of events without message, these events are all the events after one events failed,
+dlq implementation blocks all subsequent events from goinmg to handler and are stored here
+you will be able to see they have sequence numbers
+![img_2.png](img_2.png)
+
+Also when you want an event to be in the dlq, and giving a name to a dlq is also possible in axon with enque policy.
+**configuring a dlq**
+![img_3.png](img_3.png)
+**example of defining dlq enquing policy**
+![img_4.png](img_4.png)
+although not sure what is it defining, **deepseek** saying that,
+-- have to validate
+Enqueuing to the DLQ:
+When an event is evicted (as per the policy when retries > 42), it is typically moved to the Dead Letter Queue (DLQ).
+
+The DLQ is a special queue where events that cannot be processed successfully after multiple retries are stored for manual inspection or further action.
+
+So, yes, when the policy decides to evict the event, it is effectively enqueued to the DLQ.
+
+2. Retry Mechanism:
+   Retry does not mean the event moves from the DLQ back to the event handler.
+
+Instead, retries happen before the event is sent to the DLQ.
+
+Here's how it works:
+
+An event fails during processing.
+
+The RetryConstrainedEnqueuePolicy checks the retry count:
+
+If the retry count is less than or equal to 42, the event is reprocessed (retried) by sending it back to the event handler.
+
+If the retry count exceeds 42, the event is evicted (sent to the DLQ).
+
+Once an event is in the DLQ, it does not automatically retry. It stays in the DLQ until someone manually intervenes (e.g., by reprocessing it or discarding it).
+
+
+
+## Axon do dual write with event publishing, which introduces issue that GET call doesnt see data
+This is similar to shryansh jain said, how listen to yourself dual write solution,
+where instead of write to db, message is put into outbox, then from there by poller, message is published to event bus,
+then from bus, this service listens and write to db. and other service also listens the event now.
+now in the meantime if a get request comes before db is written, there will be no item in DB, so this delayed write issue,
+he said cache can solve it.
+![dual_write_delayed_write_issue.png](dual_write_delayed_write_issue.png)
+https://www.youtube.com/watch?v=QaH7r4V4RmE&ab_channel=Concept%26%26Coding-byShrayansh
+I also planned to solve it by writing to cache first, although for now i am just reqeusting again and again from
+backedn if db item is not created.
