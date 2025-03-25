@@ -40,4 +40,7 @@ axon:
     clientId: Client Booking Backend
 server:
   port: 9091
+retry:
+  interval: 5
+  maxCount: 3
 
