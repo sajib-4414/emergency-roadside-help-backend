@@ -129,7 +129,9 @@ the booking process, not the client.
 //                    ); // Timeout in milliseconds
             //better way is to have asyncrhonous handler
 
-            //a better way is to try with a retyr command handler, so we try 3 times before doing compensating action
+            //a better way is to try with a retry settings with exponential backoff, although we can write manual code
+            //but axon provides a way of doing central retry, retry settigns(which error to retry) with exponential backoff
+            //i already did htat in axon config, so i am not repeating that here
             commandGateway.send(command, (originalCommandMessage, commandResultMessage) -> {
                 if (commandResultMessage.isExceptional()) {
                     Throwable cause = commandResultMessage.exceptionResult();
@@ -142,10 +144,6 @@ the booking process, not the client.
             });
 
 
-          //  sendFindResponderCommandWithRetry(command, 3);
-
-
-
         } catch (Exception e) {
 
             log.error("find responder command creating unexpected error..............");
@@ -154,42 +152,6 @@ the booking process, not the client.
 
     }
 
-
-    //we have to overloaded methods,
-    //the first one is called from saga, the second one is called recursively until maxretry is done
-    private void sendFindResponderCommandWithRetry(FindResponderCommand command, int maxRetries){
-        sendFindResponderCommandWithRetry(command, maxRetries, 0 );
-    }
-    private void sendFindResponderCommandWithRetry(FindResponderCommand command, int maxRetries, int currentAttempt)
-    {
-        commandGateway.send(command, (commandMessage, commandResultMessage) -> {
-            if (commandResultMessage.isExceptional()) {
-                Throwable cause = commandResultMessage.exceptionResult();
-                System.err.println("FindResponderCommand  failed (attempt " + (currentAttempt + 1) + "/" + (maxRetries + 1) + "): " + cause.getMessage());
-
-                if (currentAttempt < maxRetries) {
-                    // Calculate the delay for this retry attempt
-                    long delay = currentAttempt < delaySchedule.size() ?
-                            delaySchedule.get(currentAttempt) :
-                            delaySchedule.getLast();
-
-                    System.out.println("Retrying in " + (delay / 1000) + " seconds...");
-
-                    // Schedule the retry with the calculated delay
-                    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-                    executor.schedule(() -> {
-                        sendFindResponderCommandWithRetry(command, maxRetries, currentAttempt + 1);
-                    }, delay, TimeUnit.MILLISECONDS);
-                    executor.shutdown();
-                } else {
-                    System.err.println("Max retry attempts for FindResponderCommand reached. Taking failure action.");
-                    sendResponderServiceFailureCompensatingCommand(command.getBookingId());
-                }
-            } else {
-                System.out.println("Command processed successfully: " + commandResultMessage.getPayload());
-            }
-        });
-    }
 
     private void sendResponderServiceFailureCompensatingCommand(String bookingId) {
         //send a command to update the aggreagate also
@@ -202,10 +164,11 @@ the booking process, not the client.
         commandGateway.send(command1,((commandMessage, commandResultMessage) -> {
             if (commandResultMessage.isExceptional()) {
                 //error happened again
+                //show it up on tracer or alert maybe
             }
             else{
                 //all good
-
+                log.error("success doing a compensating command to roll back booking in my current service");
             }
         }));
     }
