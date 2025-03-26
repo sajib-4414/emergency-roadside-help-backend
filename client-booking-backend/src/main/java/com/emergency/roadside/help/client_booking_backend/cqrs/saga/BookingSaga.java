@@ -130,19 +130,19 @@ the booking process, not the client.
             //better way is to have asyncrhonous handler
 
             //a better way is to try with a retyr command handler, so we try 3 times before doing compensating action
-//            commandGateway.send(command, (originalCommandMessage, commandResultMessage) -> {
-//                if (commandResultMessage.isExceptional()) {
-//                    Throwable cause = commandResultMessage.exceptionResult();
-//                    System.err.println("Command failed: " + cause.getMessage());
-//                    // Log or take action based on the failure
-//                    sendResponderServiceFailureCompensatingCommand(event);
-//                } else {
-//                    System.out.println("Command processed successfully: " + commandResultMessage.getPayload());
-//                }
-//            });
+            commandGateway.send(command, (originalCommandMessage, commandResultMessage) -> {
+                if (commandResultMessage.isExceptional()) {
+                    Throwable cause = commandResultMessage.exceptionResult();
+                    System.err.println("Command failed: " + cause.getMessage());
+                    // Log or take action based on the failure
+                    sendResponderServiceFailureCompensatingCommand(event.getBookingId());
+                } else {
+                    System.out.println("Command processed successfully: " + commandResultMessage.getPayload());
+                }
+            });
 
 
-            sendFindResponderCommandWithRetry(command, 3);
+          //  sendFindResponderCommandWithRetry(command, 3);
 
 
 

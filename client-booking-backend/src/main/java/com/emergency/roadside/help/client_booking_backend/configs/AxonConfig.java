@@ -43,7 +43,7 @@ public class AxonConfig {
 //    }
 
     @Bean
-    public DefaultCommandGateway commandGateway(CommandBus commandBus, IntervalRetryScheduler retryScheduler) {
+    public DefaultCommandGateway commandGateway(CommandBus commandBus, CustomIntervalRetryScheduler retryScheduler) {
         return DefaultCommandGateway.builder()
                 .commandBus(commandBus)
                 .retryScheduler(retryScheduler)
