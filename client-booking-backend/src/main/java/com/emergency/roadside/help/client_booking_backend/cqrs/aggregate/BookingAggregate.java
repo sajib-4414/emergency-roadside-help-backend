@@ -1,11 +1,14 @@
 package com.emergency.roadside.help.client_booking_backend.cqrs.aggregate;
 
-import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CancelBookingDueToResponderServiceUnavailableCommand;
+import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CancelBookingCommand;
+
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.UpdateBookingWithResponderFoundCommand;
-import com.emergency.roadside.help.client_booking_backend.cqrs.events.BookingCancelledDuetoRespUnavailable;
-import com.emergency.roadside.help.client_booking_backend.cqrs.events.BookingCreatedEvent;
-import com.emergency.roadside.help.client_booking_backend.cqrs.events.BookingUpdatedEvent;
+
+import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingCancelledEvent;
+import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingCreatedEvent;
+import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingUpdatedEvent;
+import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingCancelReason;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatus;
 import com.emergency.roadside.help.common_module.commonmodels.Priority;
 import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
@@ -104,16 +107,20 @@ public class BookingAggregate {
     }
 
     @CommandHandler
-    public void BookingCancellingDueToResponderServiceUnavailable(CancelBookingDueToResponderServiceUnavailableCommand command){
-        BookingCancelledDuetoRespUnavailable event= BookingCancelledDuetoRespUnavailable.builder()
+    public void CancelBookingCommandHandler(CancelBookingCommand command){
+
+        BookingCancelledEvent event= BookingCancelledEvent.builder()
                 .bookingId(command.getBookingId())
-                .status(BookingStatus.RESPONDER_SERVICE_UNAVAILABLE)
                 .build();
+        if(command.getCancelReason() == BookingCancelReason.RESPONDER_SERVICE_UNAVAILABLE)
+            event.setStatus(BookingStatus.RESPONDER_SERVICE_UNAVAILABLE);
+        else if(command.getCancelReason() == BookingCancelReason.NO_RESPONDER_FOUND)
+            event.setStatus(BookingStatus.NO_RESPONDER_FOUND);
         AggregateLifecycle.apply(event);
     }
 
     @EventSourcingHandler
-    public void onBookingCancelledDuetoRespUnavailable(BookingCancelledDuetoRespUnavailable event){
+    public void onBookingCancelledDuetoRespUnavailable(BookingCancelledEvent event){
         this.bookingId = event.getBookingId();
         this.status = event.getStatus();
     }

@@ -1,11 +1,13 @@
 package com.emergency.roadside.help.client_booking_backend.cqrs.saga;
 
-import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CancelBookingDueToResponderServiceUnavailableCommand;
+import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CancelBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.UpdateBookingWithResponderFoundCommand;
-import com.emergency.roadside.help.client_booking_backend.cqrs.events.BookingCreatedEvent;
-import com.emergency.roadside.help.client_booking_backend.cqrs.events.BookingUpdatedEvent;
+import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingCancelReason;
+import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingCreatedEvent;
+import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingUpdatedEvent;
 import com.emergency.roadside.help.client_booking_backend.cqrs.events.ClientBookingRegisteredEvent;
+import com.emergency.roadside.help.client_booking_backend.cqrs.payload.DeadlineForFindResponderPayload;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequest;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequestRepository;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatus;
@@ -17,8 +19,9 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.deadline.DeadlineManager;
+import org.axonframework.deadline.SimpleDeadlineManager;
 import org.axonframework.deadline.annotation.DeadlineHandler;
-import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.SagaLifecycle;
@@ -26,14 +29,12 @@ import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.w3c.dom.stylesheets.LinkStyle;
 
-import java.lang.reflect.Array;
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
 
 @Saga
@@ -49,8 +50,10 @@ public class BookingSaga {
     private  QueryGateway queryGateway;
     @Autowired
     private transient BookingRequestRepository bookingRequestRepository;
-    private static final List<Long>  delaySchedule = Arrays.asList(5000L, 10000L, 20000L);
 
+
+    private static final List<Long>  delaySchedule = Arrays.asList(5000L, 10000L, 20000L);
+    private Map<String, String > bookingAndDeadLineIDs = new HashMap<>();
     /*
 Why Not Use clientId as the associationProperty?
 Scope Mismatch:
@@ -105,7 +108,7 @@ the booking process, not the client.
     }
 
     @SagaEventHandler(associationProperty = "bookingId")
-    private void handleBookingCreatedEvent(BookingCreatedEvent event){
+    private void handleBookingCreatedEvent(BookingCreatedEvent event,DeadlineManager deadlineManager){
         log.info("in saga, handleBookingCreatedEvent for bookingid="+event.getBookingId()+", client id="+event.getClientId());
         log.info("bookign created in the event store, should be created asynchrounsly in read db also");
         log.info("event="+event);
@@ -143,23 +146,40 @@ the booking process, not the client.
                 }
             });
 
+            //also start a deadline to not wait indefinitely for driver acceptance
+            String deadlineId = deadlineManager.schedule(
+                    Duration.ofMillis(10000), "findResponderDeadline",
+                    new DeadlineForFindResponderPayload(command.getBookingId())
+            );
+            if(bookingAndDeadLineIDs == null)
+                bookingAndDeadLineIDs = new HashMap<>();
+            bookingAndDeadLineIDs.put(command.getBookingId(), deadlineId);
+
 
         } catch (Exception e) {
-
+            log.error("unexpected error is ",e.getStackTrace());
             log.error("find responder command creating unexpected error..............");
+            log.error(e.getMessage());
             sendResponderServiceFailureCompensatingCommand(event.getBookingId());
         }
 
     }
 
+    //means no driver responded, or we did not get any driver assigned event
+    @DeadlineHandler(deadlineName = "findResponderDeadline")
+    public void on(DeadlineForFindResponderPayload deadlinePayload) {
+        log.warn("deadline si being triggered");
+        // handle the deadline
+        sendResponderServiceFailureCompensatingCommand(deadlinePayload.getBookingId());
+    }
+
 
     private void sendResponderServiceFailureCompensatingCommand(String bookingId) {
-        //send a command to update the aggreagate also
-        log.error("nobody responded to the find responder command after 4th attempt, will do compensating transaction.....");
 
-        CancelBookingDueToResponderServiceUnavailableCommand command1  = CancelBookingDueToResponderServiceUnavailableCommand.
+        CancelBookingCommand command1  = CancelBookingCommand.
                 builder()
                 .bookingId(bookingId)
+                .cancelReason(BookingCancelReason.RESPONDER_SERVICE_UNAVAILABLE)
                 .build();
         commandGateway.send(command1,((commandMessage, commandResultMessage) -> {
             if (commandResultMessage.isExceptional()) {
@@ -181,9 +201,17 @@ the booking process, not the client.
     }
 
     @SagaEventHandler(associationProperty = "bookingId")
-    private void handleResponderAssignedEvent(ResponderAssignedEvent event){
+    private void handleResponderAssignedEvent(ResponderAssignedEvent event, DeadlineManager deadlineManager){
         log.info("in saga, ResponderAssignedEvent for bookingid="+event.getBookingId());
         log.info("event="+event);
+
+        //if we get event that responder was assigned, then cancel the deadline
+
+        String deadlineId = bookingAndDeadLineIDs.get(event.getBookingId());
+        bookingAndDeadLineIDs.remove(event.getBookingId());
+        if (deadlineId != null) {
+            deadlineManager.cancelSchedule("findResponderDeadline", deadlineId);
+        }
 
         try{
             //by now in eventstore we have written booking in tits db

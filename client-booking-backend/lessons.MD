@@ -384,9 +384,9 @@ i will make an endpoint to run all the events of a certain booking aggregate to 
 * will all the commands and event handlers idempotent, while doing this, this is also a practice. This is a great interview story to tell that i debugged event being lost, i replayed and rebuilt the events and aggregates in other microservices. i caught that some events were lost by querying eventstore with query all events by bookingId, from there i saw that some events were missed.
 * i guess i can run a background job to test this automatically, also i guess i can use a tracing tool to find this. have to see these, especially tracing.
 * dead letter configuration: https://docs.axoniq.io/axon-framework-reference/4.11/events/event-processors/dead-letter-queue/
-i htink axon does not do dead letter for commands, so have to check that out
+axon does not do dead letter for commands,saga handlers, aggregates,it only do for event handlers which are mostly used for projection.
 there is another way of dead letter handling: htere is a handler axon gives, try that out too, that is for manual handling of dead letter to some own defined table: https://discuss.axoniq.io/t/dead-letter-error-handling/5769/3
-* update the retry mechanism with axon built in, axon built in - only retry with exponential backoff for transient errros defined in axon dictionary, all others it treats as non retryable, have to customize if i want
+* (**done**) update the retry mechanism with axon built in, axon built in - only retry with exponential backoff for transient errros defined in axon dictionary, all others it treats as non retryable, have to customize if i want
 * add open telemetry+jaeger+axon: somebody said axon has built in support, so just use the agent and use open telemetry
 https://opentelemetry.io/docs/languages/java/getting-started/
 https://docs.axoniq.io/axon-framework-reference/4.10/monitoring/tracing/?utm_source=chatgpt.com
@@ -422,7 +422,8 @@ commandGateway.send(command, (commandMessage, commandResultMessage) -> {
 });
 ```
 3. Another thing is sometime if commands are failed, it is ok to retry this command a few more times, we can do that
-with a time delayed execution block. One approach is using CompletableFuture.delayedExecutor
+with a time delayed execution block. One approach is using CompletableFuture.delayedExecutor.
+this is a raw way of doing, but see next way, thats better for axon to do a centralized config.
 ```
 CompletableFuture.delayedExecutor(10, TimeUnit.SECONDS).execute(() -> {
         if (!commentRepository.existsById(commentId)) {
@@ -503,32 +504,16 @@ Also when you want an event to be in the dlq, and giving a name to a dlq is also
 ![img_3.png](img_3.png)
 **example of defining dlq enquing policy**
 ![img_4.png](img_4.png)
-although not sure what is it defining, **deepseek** saying that,
--- have to validate
-Enqueuing to the DLQ:
-When an event is evicted (as per the policy when retries > 42), it is typically moved to the Dead Letter Queue (DLQ).
-
-The DLQ is a special queue where events that cannot be processed successfully after multiple retries are stored for manual inspection or further action.
-
-So, yes, when the policy decides to evict the event, it is effectively enqueued to the DLQ.
-
-2. Retry Mechanism:
-   Retry does not mean the event moves from the DLQ back to the event handler.
-
-Instead, retries happen before the event is sent to the DLQ.
-
-Here's how it works:
-
-An event fails during processing.
-
-The RetryConstrainedEnqueuePolicy checks the retry count:
-
-If the retry count is less than or equal to 42, the event is reprocessed (retried) by sending it back to the event handler.
-
-If the retry count exceeds 42, the event is evicted (sent to the DLQ).
-
-Once an event is in the DLQ, it does not automatically retry. It stays in the DLQ until someone manually intervenes (e.g., by reprocessing it or discarding it).
-
+so enqueue,reenque works similar way i saw,
+so for the first time when dlq is involved maybe call enqueue to that event is lited on the dlq
+now event will not go from here to event handler automatically, you have to trigger the deadletter
+processing event(most often when u fixed a bug that prevent processing an event). now event will be picked from
+the dlq, if the event is now processed successfully, it will be evicted from dlq, otherwisebased on my logic
+it willbe   requeued with an incremented retry count(which is stored inside metadata to the database). 
+Now there culd be some events which after many retry trigger, still sitting, you can define condition to evict also.
+the enqueue policy class is called everytime when you trigger a retry, so if you have some logic like
+retry maximum time done or some known error, dont reenqueue it again, something like that, you can define.
+but take caution, without doing anything like alert or proper managmenet dont just evict message from dlq, usually dlq is the place u will inspect, retry.
 
 
 ## Axon do dual write with event publishing, which introduces issue that GET call doesnt see data
@@ -612,3 +597,66 @@ public class CustomIntervalRetryScheduler extends ExponentialBackOffIntervalRetr
     }
 }
 ```
+
+### solving the dual write with delayed write problem with cache
+```java
+public ResponseEntity<?> createSagaBooking(@Validated @RequestBody BookingRequestDTO payload) {
+   String uniqueBookingId = UUID.randomUUID().toString();
+   User user = getCurrentUser();
+   Client client = clientRepository.findByUser(user).orElseThrow(()->new ItemNotFoundException("client not found"));
+
+   Vehicle vehicle;
+   if(payload.getVehicleId() !=null)
+      vehicle = vehicleRepository.findById(payload.getVehicleId()).orElseThrow(()->new ItemNotFoundException("vehcile not found"));
+   else if(payload.getVehicle()!=null){
+      Vehicle dbPayload = modelMapper.map(payload.getVehicle(), Vehicle.class);
+      vehicle = vehicleService.addVehicle(dbPayload);
+   }
+   else{
+      throw new BadDataException("vehicle data is needed");
+   }
+   try{
+      RegisterClientBookingCommand command = RegisterClientBookingCommand.builder()
+              .bookingId(uniqueBookingId)
+              .clientId(client.getId())
+              .status(BookingStatus.QUEUED)
+              .dateCreated(LocalDateTime.now())
+              .vehicleId(vehicle.getId())
+              .address(payload.getAddress())
+              .description(payload.getDetailDescription())
+              .priority(payload.getPriority()==null? Priority.NEXT_BUSINESS_DAY: payload.getPriority()) //should default to next business day
+              .serviceType(payload.getServiceType())
+              .build();
+      commandGateway.sendAndWait(command);
+
+      BookingRequest dummyUnwrittenBookingRequest = new BookingRequest();
+      dummyUnwrittenBookingRequest.setRequestedBy(client);
+      dummyUnwrittenBookingRequest.setBookingId(command.getBookingId());
+      dummyUnwrittenBookingRequest.setStatus(command.getStatus());
+      dummyUnwrittenBookingRequest.setDateCreated(command.getDateCreated());
+      dummyUnwrittenBookingRequest.setVehicle(vehicle);
+      dummyUnwrittenBookingRequest.setAddress(command.getAddress());
+      dummyUnwrittenBookingRequest.setDescription(command.getDescription());
+      dummyUnwrittenBookingRequest.setPriority(command.getPriority());
+      dummyUnwrittenBookingRequest.setServiceType(command.getServiceType());
+      //solving the dual write problem, just writing to cache, and get booking status method will also return from cache always
+      //when the booking will be created in db, we will update the cache also.
+      BookingStatusResponse statusResponse = new BookingStatusResponse(dummyUnwrittenBookingRequest);
+      cacheService.putBookingToCache(statusResponse);
+      return ResponseEntity.ok(command);
+   } catch (Exception e) {
+      System.out.println("exception happened"+e.getMessage());
+      System.out.println(e.getStackTrace());
+      throw new BadDataException("Client already has a booking in progress");
+   }
+
+
+}
+```
+
+but solving the dual write problem like this created a problem, so do i just return the booking
+from cache at the time of creation and maybe not yet written to DB(but in the process of writing to eventstore, then db)
+or we always return from cache.
+so actually in our system, i for now designed in a way that getting booking details is a high 
+call API, so it is worth always returning response from cache. but for that, everytime booking is updated
+we have to update cache as well. so we are doing a write through cache.

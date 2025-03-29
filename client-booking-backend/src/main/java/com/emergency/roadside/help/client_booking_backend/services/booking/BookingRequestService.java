@@ -115,22 +115,19 @@ public class BookingRequestService {
 
 
     public BookingStatusResponse getBookingByBookingIdFromCacheOrDB(String bookingId) throws IOException {
-        //TODO temporarily disabling cache, will enable later
-//        BookingStatusResponse bookingStatus = cacheService.getBookingFromCache(bookingId)
-//                .orElseGet(()->{
-//                    BookingRequest bookingRequest2 = bookingRequestRepository.findByBookingId(bookingId);
-//                    if (bookingRequest2==null )
-//                        throw new ItemNotFoundException("booking not found");
-//                    BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest2);
-//                    cacheService.putBookingToCache(statusResponse);
-//                    return statusResponse;
-//                });
 
-        BookingRequest bookingRequest2 = bookingRequestRepository.findByBookingId(bookingId);
-        if(bookingRequest2 == null)
-            throw new ItemNotFoundException("Booking not found, try again");
-        BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest2);
-        return statusResponse;
+        BookingStatusResponse bookingStatus = cacheService.getBookingFromCache(bookingId)
+                .orElseGet(()->{
+                    log.error("booking was not found in cache with the given booking id.................");
+                    BookingRequest bookingRequest2 = bookingRequestRepository.findByBookingId(bookingId);
+                    if (bookingRequest2==null )
+                        throw new ItemNotFoundException("booking not found");
+                    BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest2);
+                    cacheService.putBookingToCache(statusResponse);
+                    return statusResponse;
+                });
+
+        return bookingStatus;
     }
 
     public BookingStatusResponse getBookingById(Long id) {

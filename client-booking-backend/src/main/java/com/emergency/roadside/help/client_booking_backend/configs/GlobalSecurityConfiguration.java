@@ -41,6 +41,7 @@ public class GlobalSecurityConfiguration {
                         auth
                                 .requestMatchers("/api/v1/auth/validate-and-get-user").authenticated()
                                 .requestMatchers("/api/v1/auth/**").permitAll()
+                                .requestMatchers("/api/v1/cqrs/**").permitAll()
                                 .requestMatchers("/actuator/**").permitAll()
                                 .requestMatchers("/error").permitAll()
                                 //for any other URL, just regylar autghenticatioin is imposed

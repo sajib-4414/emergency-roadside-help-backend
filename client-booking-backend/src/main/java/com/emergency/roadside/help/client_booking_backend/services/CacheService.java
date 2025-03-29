@@ -6,6 +6,7 @@ import com.emergency.roadside.help.client_booking_backend.model.client.LocalDate
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.util.Optional;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class CacheService {
     private final CacheManager cacheManager;
     private final GsonBuilder gsonBuilder;
@@ -43,6 +45,9 @@ public class CacheService {
 
     public void putBookingToCache(BookingStatusResponse bookingStatusResponse){
         Cache cache = cacheManager.getCache("booking");
+        if(cache == null)
+            throw new RuntimeException("cache is finding null");
+        log.info("the booking id i am putting is", bookingStatusResponse.getBookingId());
         cache.put(bookingStatusResponse.getBookingId(),bookingStatusResponse);
     }
 

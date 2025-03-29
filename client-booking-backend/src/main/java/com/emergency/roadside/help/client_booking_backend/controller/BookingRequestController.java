@@ -7,12 +7,14 @@ import com.emergency.roadside.help.client_booking_backend.model.client.ClientRep
 import com.emergency.roadside.help.client_booking_backend.model.client.User;
 import com.emergency.roadside.help.client_booking_backend.model.vehicle.Vehicle;
 import com.emergency.roadside.help.client_booking_backend.model.vehicle.VehicleRepository;
+import com.emergency.roadside.help.client_booking_backend.services.CacheService;
 import com.emergency.roadside.help.client_booking_backend.services.booking.BookingRequestService;
 import com.emergency.roadside.help.client_booking_backend.services.vehicle.VehicleService;
 import com.emergency.roadside.help.common_module.commonmodels.Priority;
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.BadDataException;
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.emergency.roadside.help.client_booking_backend.configs.auth.AuthHelper.getCurrentUser;
-
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/bookings")
 @AllArgsConstructor
@@ -36,6 +38,7 @@ public class BookingRequestController {
     private final VehicleService vehicleService;
     private final ModelMapper modelMapper;
     private CommandGateway commandGateway;
+    private CacheService cacheService;
 
     @PostMapping
     public ResponseEntity<BookingRequest> createBooking(@Validated @RequestBody BookingRequestDTO payload) {
@@ -73,6 +76,24 @@ public class BookingRequestController {
                     .serviceType(payload.getServiceType())
                     .build();
             commandGateway.sendAndWait(command);
+
+            BookingRequest dummyUnwrittenBookingRequest = new BookingRequest();
+            dummyUnwrittenBookingRequest.setRequestedBy(client);
+            dummyUnwrittenBookingRequest.setBookingId(command.getBookingId());
+            dummyUnwrittenBookingRequest.setStatus(command.getStatus());
+            dummyUnwrittenBookingRequest.setDateCreated(command.getDateCreated());
+            dummyUnwrittenBookingRequest.setVehicle(vehicle);
+            dummyUnwrittenBookingRequest.setAddress(command.getAddress());
+            dummyUnwrittenBookingRequest.setDescription(command.getDescription());
+            dummyUnwrittenBookingRequest.setPriority(command.getPriority());
+            dummyUnwrittenBookingRequest.setServiceType(command.getServiceType());
+            //solving the dual write problem, just writing to cache, and get booking status method will also return from cache always
+            //when the booking will be created in db, we will update the cache also.
+            BookingStatusResponse statusResponse = new BookingStatusResponse(dummyUnwrittenBookingRequest);
+            cacheService.putBookingToCache(statusResponse);
+
+
+
             return ResponseEntity.ok(command);
         } catch (Exception e) {
             System.out.println("exception happened"+e.getMessage());

@@ -27,6 +27,7 @@ public class BookingStatusResponse {
 
     public BookingStatusResponse(BookingRequest bookingRequest) {
         this.id = bookingRequest.getId();
+        this.bookingId =bookingRequest.getBookingId();
         this.requestedBy = new ClientMiniResponse(bookingRequest.getRequestedBy());
         this.dateCreated = bookingRequest.getDateCreated();
         this.status = bookingRequest.getStatus();

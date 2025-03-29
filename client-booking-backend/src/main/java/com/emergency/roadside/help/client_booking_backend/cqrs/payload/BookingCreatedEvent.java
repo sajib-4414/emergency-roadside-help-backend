@@ -1,4 +1,4 @@
-package com.emergency.roadside.help.client_booking_backend.cqrs.events;
+package com.emergency.roadside.help.client_booking_backend.cqrs.payload;
 
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatus;
 import com.emergency.roadside.help.common_module.commonmodels.Priority;
@@ -14,17 +14,22 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BookingUpdatedEvent {
+public class BookingCreatedEvent {
     private String bookingId;
+
+    private Long clientId;
 
     private BookingStatus status;
 
-    private String responderName;
-
-    private Long responderId;
-
     private ServiceType serviceType;
 
-    private String address;
+    private Long vehicleId;
 
+    private String description;
+
+    private Priority priority;
+
+    private LocalDateTime dateCreated;
+
+    private String address;
 }
