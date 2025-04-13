@@ -1,8 +1,11 @@
 package com.emergency.roadside.help.client_booking_backend.cqrs.events;
 
+import com.emergency.roadside.help.client_booking_backend.cqrs.commads.UpdateBookingWithResponderAssignedWaitingToAcceptCommand;
+import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingAssignmentDoneWaitingToAcceptEvent;
 import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingCancelledEvent;
 import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingCreatedEvent;
 import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingUpdatedEvent;
+import com.emergency.roadside.help.client_booking_backend.cqrs.query.BookingStatusQuery;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequest;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequestRepository;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatus;
@@ -10,11 +13,16 @@ import com.emergency.roadside.help.client_booking_backend.model.booking.BookingS
 import com.emergency.roadside.help.client_booking_backend.model.client.ClientRepository;
 import com.emergency.roadside.help.client_booking_backend.model.vehicle.VehicleRepository;
 import com.emergency.roadside.help.client_booking_backend.services.CacheService;
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
+import com.emergency.roadside.help.common_module.saga.events.ResponderReservedAndNotifiedEvent;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventhandling.ReplayStatus;
+import org.axonframework.modelling.saga.SagaEventHandler;
+import org.axonframework.queryhandling.QueryHandler;
+import org.axonframework.queryhandling.QueryUpdateEmitter;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +35,7 @@ public class BookingEventHandler {
     private final BookingRequestRepository bookingRequestRepository;
     private final ClientRepository clientRepository;
     private CacheService cacheService;
+    private QueryUpdateEmitter queryUpdateEmitter;
 
     @EventHandler
     public void onBookingCreatedEvent(BookingCreatedEvent event, ReplayStatus replayStatus){
@@ -55,6 +64,11 @@ public class BookingEventHandler {
         BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest);
         cacheService.putBookingToCache(statusResponse);
 
+        //for subscription query
+        queryUpdateEmitter.emit(BookingStatusQuery.class,
+                query -> query.getBookingId().equals(event.getBookingId()),
+                statusResponse);
+
     }
 
     @EventHandler
@@ -70,7 +84,41 @@ public class BookingEventHandler {
             bookingRequestRepository.save(bookingRequest);
             BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest);
             cacheService.putBookingToCache(statusResponse);
+
+
+            //for subscription query
+            queryUpdateEmitter.emit(BookingStatusQuery.class,
+                    query -> query.getBookingId().equals(event.getBookingId()),
+                    statusResponse);
         }
+
+
+
+
+    }
+
+    @EventHandler
+    public void onBookingUpdatedEventWithWaitingForResponderToAccept(BookingAssignmentDoneWaitingToAcceptEvent event, ReplayStatus replayStatus){
+        System.out.println("EventHandler to write in DB received BookingAssignmentDoneWaitingToAcceptEvent event ");
+        System.out.println("Event details: " + event); // Log the event object
+        BookingRequest bookingRequest = bookingRequestRepository.findByBookingId(event.getBookingId());
+        if(bookingRequest !=null){
+            bookingRequest.setStatus(event.getStatus());
+            bookingRequest.setAssignmentId(event.getAssignmentId());
+            log.info("printing the object before persisting....");
+            log.info(bookingRequest.toString());
+            log.info("status is"+bookingRequest.getStatus());
+            bookingRequestRepository.save(bookingRequest);
+            BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest);
+            cacheService.putBookingToCache(statusResponse);
+
+
+            //for subscription query
+            queryUpdateEmitter.emit(BookingStatusQuery.class,
+                    query -> query.getBookingId().equals(event.getBookingId()),
+                    statusResponse);
+        }
+
 
 
 
@@ -103,6 +151,11 @@ public class BookingEventHandler {
                 bookingRequestRepository.save(bookingRequest);
                 BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest);
                 cacheService.putBookingToCache(statusResponse);
+
+                //for subscription query
+                queryUpdateEmitter.emit(BookingStatusQuery.class,
+                        query -> query.getBookingId().equals(event.getBookingId()),
+                        statusResponse);
             }
             else{
                 log.info("skipping updating the booking as RESPONDER_SERVICE_UNAVAILABLE as the booking was already accepted before");
@@ -110,5 +163,28 @@ public class BookingEventHandler {
 
         }
 
+    }
+
+
+
+    @QueryHandler
+    public BookingStatusResponse handle(BookingStatusQuery query) {
+//        BookingRequest booking = bookingRequestRepository.findByBookingId(query.getBookingId());
+//        if(booking == null)
+//            throw new ItemNotFoundException("booking not found with id "+query.getBookingId());
+//        BookingStatusResponse statusResponse = new BookingStatusResponse(booking);
+
+        BookingStatusResponse bookingStatus = cacheService.getBookingFromCache(query.getBookingId())
+                .orElseGet(()->{
+                    log.error("booking was not found in cache with the given booking id.................");
+                    BookingRequest bookingRequest2 = bookingRequestRepository.findByBookingId(query.getBookingId());
+                    if (bookingRequest2==null )
+                        throw new ItemNotFoundException("booking not found");
+                    BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest2);
+                    cacheService.putBookingToCache(statusResponse);
+                    return statusResponse;
+                });
+        return
+                bookingStatus;
     }
 }

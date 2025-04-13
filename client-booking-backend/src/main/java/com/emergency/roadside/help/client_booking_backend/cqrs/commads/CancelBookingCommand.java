@@ -12,5 +12,6 @@ public class CancelBookingCommand {
     @TargetAggregateIdentifier
     private String bookingId;
 
+    private String assignmentId;
     private BookingCancelReason cancelReason;
 }

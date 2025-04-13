@@ -20,6 +20,9 @@ public class BookingRequest extends BaseEntity {
     @Column(name = "booking_id", unique = true)
     private String bookingId;
 
+    @Column(name = "assignment_id", unique = true)
+    private String assignmentId;
+
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
     private Client requestedBy;

@@ -1,6 +1,7 @@
 package com.emergency.roadside.help.responder_assignment_backend.cqrs.events;
 
 import com.emergency.roadside.help.common_module.saga.events.ResponderAssignedEvent;
+import com.emergency.roadside.help.common_module.saga.events.ResponderAssignmentCancelledEvent;
 import com.emergency.roadside.help.common_module.saga.events.ResponderReservedAndNotifiedEvent;
 import com.emergency.roadside.help.responder_assignment_backend.model.assignment.Assignment;
 import com.emergency.roadside.help.responder_assignment_backend.model.assignment.AssignmentRepository;
@@ -51,6 +52,19 @@ public class AssignmentEventHandler {
     @Transactional
     public void onResponderAssignedEvent(ResponderAssignedEvent event){
         System.out.println("EventHandler to write in DB received ResponderAssignedEvent command ");
+        System.out.println("Event details: " + event); // Log the event object
+        Assignment assignment = assignmentRepository.findByBookingId(event.getBookingId());
+        assignment.setAssignStatus(event.getAssignStatus());
+        log.info("printing the object before saving in assignment table onResponderAssignedEvent ....");
+        log.info(assignment.toString());
+        log.info("status is"+assignment.getAssignStatus());
+        assignmentRepository.save(assignment);
+    }
+
+    @EventHandler
+    @Transactional
+    public void onResponderAssignmentCancelledEvent(ResponderAssignmentCancelledEvent event){
+        System.out.println("EventHandler to write in DB received ResponderAssignmentCancelledEvent command ");
         System.out.println("Event details: " + event); // Log the event object
         Assignment assignment = assignmentRepository.findByBookingId(event.getBookingId());
         assignment.setAssignStatus(event.getAssignStatus());

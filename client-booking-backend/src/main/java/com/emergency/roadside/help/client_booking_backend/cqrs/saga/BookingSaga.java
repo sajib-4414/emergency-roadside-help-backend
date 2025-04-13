@@ -2,19 +2,20 @@ package com.emergency.roadside.help.client_booking_backend.cqrs.saga;
 
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CancelBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
+import com.emergency.roadside.help.client_booking_backend.cqrs.commads.UpdateBookingWithResponderAssignedWaitingToAcceptCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.UpdateBookingWithResponderFoundCommand;
-import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingCancelReason;
-import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingCreatedEvent;
-import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingUpdatedEvent;
+import com.emergency.roadside.help.client_booking_backend.cqrs.payload.*;
 import com.emergency.roadside.help.client_booking_backend.cqrs.events.ClientBookingRegisteredEvent;
-import com.emergency.roadside.help.client_booking_backend.cqrs.payload.DeadlineForFindResponderPayload;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequest;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequestRepository;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatus;
 import com.emergency.roadside.help.common_module.saga.commands.AssistanceCreatedEvent;
+import com.emergency.roadside.help.common_module.saga.commands.CancelResponderAssignmentCommand;
 import com.emergency.roadside.help.common_module.saga.commands.CreateAssistanceCommand;
 import com.emergency.roadside.help.common_module.saga.commands.FindResponderCommand;
 import com.emergency.roadside.help.common_module.saga.events.ResponderAssignedEvent;
+import com.emergency.roadside.help.common_module.saga.events.ResponderAssignmentCancelledEvent;
+import com.emergency.roadside.help.common_module.saga.events.ResponderReservedAndNotifiedEvent;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.deadline.DeadlineManager;
 import org.axonframework.deadline.SimpleDeadlineManager;
 import org.axonframework.deadline.annotation.DeadlineHandler;
+import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.SagaLifecycle;
@@ -108,7 +110,7 @@ the booking process, not the client.
     }
 
     @SagaEventHandler(associationProperty = "bookingId")
-    private void handleBookingCreatedEvent(BookingCreatedEvent event,DeadlineManager deadlineManager){
+    private void handleBookingCreatedEvent(BookingCreatedEvent event){
         log.info("in saga, handleBookingCreatedEvent for bookingid="+event.getBookingId()+", client id="+event.getClientId());
         log.info("bookign created in the event store, should be created asynchrounsly in read db also");
         log.info("event="+event);
@@ -140,27 +142,20 @@ the booking process, not the client.
                     Throwable cause = commandResultMessage.exceptionResult();
                     System.err.println("Command failed: " + cause.getMessage());
                     // Log or take action based on the failure
-                    sendResponderServiceFailureCompensatingCommand(event.getBookingId());
+                    sendResponderServiceFailureCompensatingCommand(event.getBookingId(), BookingCancelReason.RESPONDER_SERVICE_UNAVAILABLE);
                 } else {
                     System.out.println("Command processed successfully: " + commandResultMessage.getPayload());
                 }
             });
 
-            //also start a deadline to not wait indefinitely for driver acceptance
-            String deadlineId = deadlineManager.schedule(
-                    Duration.ofMillis(10000), "findResponderDeadline",
-                    new DeadlineForFindResponderPayload(command.getBookingId())
-            );
-            if(bookingAndDeadLineIDs == null)
-                bookingAndDeadLineIDs = new HashMap<>();
-            bookingAndDeadLineIDs.put(command.getBookingId(), deadlineId);
+
 
 
         } catch (Exception e) {
             log.error("unexpected error is ",e.getStackTrace());
             log.error("find responder command creating unexpected error..............");
             log.error(e.getMessage());
-            sendResponderServiceFailureCompensatingCommand(event.getBookingId());
+            sendResponderServiceFailureCompensatingCommand(event.getBookingId(), BookingCancelReason.ERROR_ON_BOOKING_SERVICE);
         }
 
     }
@@ -170,16 +165,17 @@ the booking process, not the client.
     public void on(DeadlineForFindResponderPayload deadlinePayload) {
         log.warn("deadline si being triggered");
         // handle the deadline
-        sendResponderServiceFailureCompensatingCommand(deadlinePayload.getBookingId());
+        sendResponderServiceFailureCompensatingCommand(deadlinePayload.getBookingId(), BookingCancelReason.RESPONDER_DID_NOT_ACCEPT);
     }
 
 
-    private void sendResponderServiceFailureCompensatingCommand(String bookingId) {
+    private void sendResponderServiceFailureCompensatingCommand(String bookingId, BookingCancelReason reason) {
 
         CancelBookingCommand command1  = CancelBookingCommand.
                 builder()
                 .bookingId(bookingId)
-                .cancelReason(BookingCancelReason.RESPONDER_SERVICE_UNAVAILABLE)
+                .cancelReason(reason)
+
                 .build();
         commandGateway.send(command1,((commandMessage, commandResultMessage) -> {
             if (commandResultMessage.isExceptional()) {
@@ -281,6 +277,66 @@ the booking process, not the client.
         log.info("SAGA is DONE...................YEEEEEEEEEEEE");
         log.info("assistance also created on the assistance service, for now booking creation done");
         log.info("event="+event);
+    }
+
+
+
+    @SagaEventHandler(associationProperty = "bookingId")
+    public void onBookingCancelled(BookingCancelledEvent event){
+        //if the error is related to like nobody responded, then send a command to responder service to cancel the assignment there
+        if(event.getStatus() == BookingStatus.RESPONDER_DID_NOT_ACCEPT){
+            CancelResponderAssignmentCommand command = CancelResponderAssignmentCommand.builder()
+                    .bookingId(event.getBookingId())
+                    .assignmentId(event.getAssignmentId())
+                    .build();
+            commandGateway.send(command,((commandMessage, commandResultMessage) -> {
+                if (commandResultMessage.isExceptional()) {
+                    System.out.println(command);
+                    System.out.println(commandResultMessage);
+                    //error happened again
+                    //show it up on tracer or alert maybe
+                }
+                else{
+                    //all good
+                    log.error("success sending a command to responder to cancel the assignment of that booking");
+                }
+            }));
+        }
+    }
+
+    @EndSaga
+    @SagaEventHandler(associationProperty = "bookingId")
+    public void onResponderAssignmentCancelledEventInResponderService(ResponderAssignmentCancelledEvent event){
+
+        //booking was already cancelled before sending command to responder assignment service
+        //so this just serves as an acknowledgement
+
+    }
+
+    @SagaEventHandler(associationProperty = "bookingId")
+    public void onResponderReservedAndWaitingForAcceptanceForAggregate(ResponderReservedAndNotifiedEvent event){
+        //command to update booking with assignment id, then we will start deadline after booking is updated
+        UpdateBookingWithResponderAssignedWaitingToAcceptCommand command = UpdateBookingWithResponderAssignedWaitingToAcceptCommand.builder()
+                .bookingId(event.getBookingId())
+                .assignmentId(event.getAssignmentId())
+                .bookingStatus(BookingStatus.RESERVED_WAITING)
+                .build();
+        commandGateway.sendAndWait(command);
+    }
+
+    //means booking db and event store has stored the assignment id, now go ahead with deadline
+    @SagaEventHandler(associationProperty = "bookingId")
+    public void onBookingAssignmentDoneWaitingToAcceptEvent(BookingAssignmentDoneWaitingToAcceptEvent event ,DeadlineManager deadlineManager){
+        //now we start the deadline and wait
+        //also start a deadline to not wait indefinitely for driver acceptance
+        String deadlineId = deadlineManager.schedule(
+                Duration.ofMillis(15000), "findResponderDeadline",
+                new DeadlineForFindResponderPayload(event.getBookingId())
+        );
+        if(bookingAndDeadLineIDs == null)
+            bookingAndDeadLineIDs = new HashMap<>();
+        bookingAndDeadLineIDs.put(event.getBookingId(), deadlineId);
+
     }
 
 

@@ -660,3 +660,26 @@ or we always return from cache.
 so actually in our system, i for now designed in a way that getting booking details is a high 
 call API, so it is worth always returning response from cache. but for that, everytime booking is updated
 we have to update cache as well. so we are doing a write through cache.
+
+## Another lesson:
+booking service sent command to responder service that find me a responder.
+now responder was assigned, but as responder was not accepting, then booking saga had a deadline that
+if no responder accept event is coming in 50s, then mark the booking as cancelled,
+so the booking was marked cancel, but in the responder service it was staying as resevered still, 
+what i need to do is, when i cancel a booking on the booking service, also need to cancel the booking assignment
+on the responder service, otherwise, responder can later accept it, which is not the correct business case.
+Also if that somehow happens, in booking service when such event comes, we should check if the booking has reached
+any terminus state like cancelled/completed, then no further update will be applied, like responder accepted, all should be rejcted.
+actually here i got a problem that to order the responder service that cancel this assignment,
+i have cancelled the booking, i need the assignment id, afor the assignment service this is an existing
+aggregate, to command a aggreegate handler with existing aggregate i need to provide the aggegateid(in this case assignment id)
+in the command, this is different than first time creating aggregate int he responder service(as it was first time).
+so i had to get an event to booking service that assignment created with reserved status but rseerved person did not accept yet,
+with this, i got the assignment id. Now this also needed to be done syncrhonously,
+like first i did was i threw the command to find responder command and immediately started timer 
+that in 15s i must get a yes respionder accepted command, if not i will throw a cancel the reservaton command.,
+in the meantime when assignment service would create assignment but in reserved state, it would send the event that
+i created this assignment, and here is the assignment id, so i would have the assignment id saved, and after 15s i will use it.
+but it did not work, i saw that due to parallel processing, byt th etime 15s went, i saw that i did not have the assignment id,
+so i had to do this syncrhonously, so i started the timer of 15s only after i got the event that an assignment was created
+with reserved state, and i updated the assignment id on the booking service.

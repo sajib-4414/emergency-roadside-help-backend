@@ -2,12 +2,16 @@ package com.emergency.roadside.help.responder_assignment_backend.cqrs.aggregate;
 
 import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
+import com.emergency.roadside.help.common_module.saga.commands.CancelResponderAssignmentCommand;
 import com.emergency.roadside.help.common_module.saga.commands.FindResponderCommand;
 import com.emergency.roadside.help.common_module.saga.events.ResponderAssignedEvent;
+import com.emergency.roadside.help.common_module.saga.events.ResponderAssignmentCancelledEvent;
 import com.emergency.roadside.help.common_module.saga.events.ResponderNotFoundEvent;
 import com.emergency.roadside.help.common_module.saga.events.ResponderReservedAndNotifiedEvent;
 import com.emergency.roadside.help.common_module.commonmodels.AssignStatus;
 import com.emergency.roadside.help.responder_assignment_backend.cqrs.commands.ResponderAcceptedCommand;
+import com.emergency.roadside.help.responder_assignment_backend.model.assignment.Assignment;
+import com.emergency.roadside.help.responder_assignment_backend.model.assignment.AssignmentRepository;
 import com.emergency.roadside.help.responder_assignment_backend.model.responder.Responder;
 import com.emergency.roadside.help.responder_assignment_backend.model.responder.ResponderRepository;
 import lombok.NoArgsConstructor;
@@ -29,8 +33,6 @@ import java.util.UUID;
 @NoArgsConstructor
 public class AssignmentAggregate {
 
-
-    private  ResponderRepository responderRepository;
 
     @AggregateIdentifier
     private String assignmentId;
@@ -132,6 +134,30 @@ public class AssignmentAggregate {
     }
 
 
+    @CommandHandler
+    public void onCancelResponderAssignmentCommand(CancelResponderAssignmentCommand command){
+        try{
+
+
+            //if all good persist to event db that booking created
+            ResponderAssignmentCancelledEvent event = ResponderAssignmentCancelledEvent
+                    .builder()
+                    .assignmentId(command.getAssignmentId())
+                    .bookingId(command.getBookingId())
+                    .assignStatus(AssignStatus.REVOKED) //means system cancelled it
+                    .build();
+            AggregateLifecycle.apply(event);
+            log.info("just dispatched the ResponderAssignmentCancelledEvent as soon as ");
+        } catch (ItemNotFoundException e) {
+//            ResponderNotFoundEvent responderNotFoundEvent = ResponderNotFoundEvent
+//                    .builder()
+//                    .bookingId(command.getBookingId())
+//                    .build();
+//            AggregateLifecycle.apply(responderNotFoundEvent);
+        }
+    }
+
+
     //to update the event on eventstore for replaying
     @EventSourcingHandler
     public void onResponderReservedAndNotifiedEvent(ResponderReservedAndNotifiedEvent event){
@@ -159,6 +185,13 @@ public class AssignmentAggregate {
 
     @EventSourcingHandler
     public void onResponderAssignedEvent(ResponderAssignedEvent event){
+        this.bookingId = event.getBookingId();
+        this.assignmentId = event.getAssignmentId();
+        this.assignStatus = event.getAssignStatus();
+    }
+
+    @EventSourcingHandler
+    public void onResponderAssignmentCancelledEvent(ResponderAssignmentCancelledEvent event){
         this.bookingId = event.getBookingId();
         this.assignmentId = event.getAssignmentId();
         this.assignStatus = event.getAssignStatus();
