@@ -5,7 +5,7 @@ import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBoo
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.UpdateBookingWithResponderAssignedWaitingToAcceptCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.UpdateBookingWithResponderFoundCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.payload.*;
-import com.emergency.roadside.help.client_booking_backend.cqrs.events.ClientBookingRegisteredEvent;
+//import com.emergency.roadside.help.client_booking_backend.cqrs.events.ClientBookingRegisteredEvent;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequest;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingRequestRepository;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatus;
@@ -68,47 +68,47 @@ The @AggregateIdentifier in the ClientBookingsAggregate is clientId,
 but the saga correlates events using bookingId because the saga manages
 the booking process, not the client.
  */
+//    @StartSaga
+//    @SagaEventHandler(associationProperty = "clientId")
+//    private void handleClientBookingRegisteredEvent(ClientBookingRegisteredEvent event){
+//        log.info("booking is being created for the client in saga starting, for clientid="+event.getClientId()+", for bookingid="+event.getBookingId());
+//        log.info("event="+event);
+//        try{
+//            //by now in eventstore we have written that client is wanting to book this booking
+//            //you can do some check with queryhandler, to send some query to relationalDB if  you want.
+//            //like to see if projection is written, all good to go to next stage of creating the booking
+//            //as per deepseek, its not recommended to do a query here to the read db, because readdb is meant to be
+//            //eventually consistent, but if you still need to be very consistent you can do it.
+//
+//            //this saga started with asscociating with client id, but as its actually a booking id, so are manually associating it as
+//            //well, otherwise saga handler with this association id will not be fired
+//            SagaLifecycle.associateWith("bookingId", event.getBookingId());
+//
+//            //then you can command the next step create booking
+//            CreateBookingCommand command = CreateBookingCommand
+//                    .builder()
+//                    .bookingId(event.getBookingId())
+//                    .status(event.getStatus()) //now booking is in queued state
+//                    .clientId(event.getClientId())
+//                    .dateCreated(event.getDateCreated())
+//                    .description(event.getDescription())
+//                    .priority(event.getPriority())
+//                    .serviceType(event.getServiceType())
+//                    .vehicleId(event.getVehicleId())
+//                    .address(event.getAddress())
+//                    .build();
+//            commandGateway.sendAndWait(command);
+//        } catch (Exception e) {
+//            log.error("error after booking id added in clients profile in eventstore but before going to create booking,clientid="+event.getClientId()+",bookingid="+ event.getBookingId());
+//            log.error("cancelling the booking creation from saga, doing a cancel booking command");
+//            log.error(e.getMessage());
+//            sendClientBookingCancelCommand(event);
+//        }
+//
+//
+//    }
+
     @StartSaga
-    @SagaEventHandler(associationProperty = "clientId")
-    private void handleClientBookingRegisteredEvent(ClientBookingRegisteredEvent event){
-        log.info("booking is being created for the client in saga starting, for clientid="+event.getClientId()+", for bookingid="+event.getBookingId());
-        log.info("event="+event);
-        try{
-            //by now in eventstore we have written that client is wanting to book this booking
-            //you can do some check with queryhandler, to send some query to relationalDB if  you want.
-            //like to see if projection is written, all good to go to next stage of creating the booking
-            //as per deepseek, its not recommended to do a query here to the read db, because readdb is meant to be
-            //eventually consistent, but if you still need to be very consistent you can do it.
-
-            //this saga started with asscociating with client id, but as its actually a booking id, so are manually associating it as
-            //well, otherwise saga handler with this association id will not be fired
-            SagaLifecycle.associateWith("bookingId", event.getBookingId());
-
-            //then you can command the next step create booking
-            CreateBookingCommand command = CreateBookingCommand
-                    .builder()
-                    .bookingId(event.getBookingId())
-                    .status(event.getStatus()) //now booking is in queued state
-                    .clientId(event.getClientId())
-                    .dateCreated(event.getDateCreated())
-                    .description(event.getDescription())
-                    .priority(event.getPriority())
-                    .serviceType(event.getServiceType())
-                    .vehicleId(event.getVehicleId())
-                    .address(event.getAddress())
-                    .build();
-            commandGateway.sendAndWait(command);
-        } catch (Exception e) {
-            log.error("error after booking id added in clients profile in eventstore but before going to create booking,clientid="+event.getClientId()+",bookingid="+ event.getBookingId());
-            log.error("cancelling the booking creation from saga, doing a cancel booking command");
-            log.error(e.getMessage());
-            sendClientBookingCancelCommand(event);
-        }
-
-
-
-    }
-
     @SagaEventHandler(associationProperty = "bookingId")
     private void handleBookingCreatedEvent(BookingCreatedEvent event){
         log.info("in saga, handleBookingCreatedEvent for bookingid="+event.getBookingId()+", client id="+event.getClientId());
@@ -191,10 +191,10 @@ the booking process, not the client.
 
 
 
-    private void sendClientBookingCancelCommand(ClientBookingRegisteredEvent event) {
-        //send a command to update the aggreagate also
-
-    }
+//    private void sendClientBookingCancelCommand(ClientBookingRegisteredEvent event) {
+//        //send a command to update the aggreagate also
+//
+//    }
 
     @SagaEventHandler(associationProperty = "bookingId")
     private void handleResponderAssignedEvent(ResponderAssignedEvent event, DeadlineManager deadlineManager){

@@ -1,5 +1,6 @@
 package com.emergency.roadside.help.client_booking_backend.controller;
 
+import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.RegisterClientBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.model.booking.*;
 import com.emergency.roadside.help.client_booking_backend.model.client.Client;
@@ -41,10 +42,11 @@ public class BookingRequestController {
     private CacheService cacheService;
 
     @PostMapping
-    public ResponseEntity<BookingRequest> createBooking(@Validated @RequestBody BookingRequestDTO payload) {
+    public ResponseEntity<?> createBooking(@Validated @RequestBody BookingRequestDTO payload) {
 
-        BookingRequest createdBooking = bookingRequestService.createBooking(payload);
-        return ResponseEntity.ok(createdBooking);
+//        BookingRequest createdBooking = bookingRequestService.createBooking(payload);
+        return ResponseEntity.ok("this endpoint should not be used anymore, use the saga one");
+//        return ResponseEntity.ok(createdBooking);
     }
 
     @PostMapping("/create-saga-booking")
@@ -64,34 +66,37 @@ public class BookingRequestController {
             throw new BadDataException("vehicle data is needed");
         }
         try{
-            RegisterClientBookingCommand command = RegisterClientBookingCommand.builder()
+            CreateBookingCommand command = CreateBookingCommand
+                    .builder()
                     .bookingId(uniqueBookingId)
+                    .status(BookingStatus.QUEUED) //now booking is in queued state
                     .clientId(client.getId())
-                    .status(BookingStatus.QUEUED)
                     .dateCreated(LocalDateTime.now())
+                    .description(payload.getDetailDescription())
+                    .priority(payload.getPriority()==null? Priority.NEXT_BUSINESS_DAY: payload.getPriority())
+                    .serviceType(payload.getServiceType())
                     .vehicleId(vehicle.getId())
                     .address(payload.getAddress())
-                    .description(payload.getDetailDescription())
-                    .priority(payload.getPriority()==null? Priority.NEXT_BUSINESS_DAY: payload.getPriority()) //should default to next business day
-                    .serviceType(payload.getServiceType())
                     .build();
+
+//            RegisterClientBookingCommand command = RegisterClientBookingCommand.builder()
+//                    .bookingId(uniqueBookingId)
+//                    .clientId(client.getId())
+//                    .status(BookingStatus.QUEUED)
+//                    .dateCreated(LocalDateTime.now())
+//                    .vehicleId(vehicle.getId())
+//                    .address(payload.getAddress())
+//                    .description(payload.getDetailDescription())
+//                    .priority(payload.getPriority()==null? Priority.NEXT_BUSINESS_DAY: payload.getPriority()) //should default to next business day
+//                    .serviceType(payload.getServiceType())
+//                    .build();
             commandGateway.sendAndWait(command);
 
-            BookingRequest dummyUnwrittenBookingRequest = new BookingRequest();
-            dummyUnwrittenBookingRequest.setRequestedBy(client);
-            dummyUnwrittenBookingRequest.setBookingId(command.getBookingId());
-            dummyUnwrittenBookingRequest.setStatus(command.getStatus());
-            dummyUnwrittenBookingRequest.setDateCreated(command.getDateCreated());
-            dummyUnwrittenBookingRequest.setVehicle(vehicle);
-            dummyUnwrittenBookingRequest.setAddress(command.getAddress());
-            dummyUnwrittenBookingRequest.setDescription(command.getDescription());
-            dummyUnwrittenBookingRequest.setPriority(command.getPriority());
-            dummyUnwrittenBookingRequest.setServiceType(command.getServiceType());
+            BookingRequest dummyUnwrittenBookingRequest = getBookingRequest(client, command, vehicle);
             //solving the dual write problem, just writing to cache, and get booking status method will also return from cache always
             //when the booking will be created in db, we will update the cache also.
             BookingStatusResponse statusResponse = new BookingStatusResponse(dummyUnwrittenBookingRequest);
             cacheService.putBookingToCache(statusResponse);
-
 
 
             return ResponseEntity.ok(command);
@@ -102,6 +107,20 @@ public class BookingRequestController {
         }
 
 
+    }
+
+    private static BookingRequest getBookingRequest(Client client, CreateBookingCommand command, Vehicle vehicle) {
+        BookingRequest dummyUnwrittenBookingRequest = new BookingRequest();
+        dummyUnwrittenBookingRequest.setRequestedBy(client);
+        dummyUnwrittenBookingRequest.setBookingId(command.getBookingId());
+        dummyUnwrittenBookingRequest.setStatus(command.getStatus());
+        dummyUnwrittenBookingRequest.setDateCreated(command.getDateCreated());
+        dummyUnwrittenBookingRequest.setVehicle(vehicle);
+        dummyUnwrittenBookingRequest.setAddress(command.getAddress());
+        dummyUnwrittenBookingRequest.setDescription(command.getDescription());
+        dummyUnwrittenBookingRequest.setPriority(command.getPriority());
+        dummyUnwrittenBookingRequest.setServiceType(command.getServiceType());
+        return dummyUnwrittenBookingRequest;
     }
 
     @GetMapping("/my-bookings")

@@ -125,13 +125,13 @@ public class BookingEventHandler {
     }
 
     //this is for testing only
-    @EventHandler
-    public void onClientBookingRegisteredEvent(ClientBookingRegisteredEvent event){
-        System.out.println("EventHandler to write in DB received ClientBookingRegisteredEvent command ");
-        System.out.println("Event details: " + event); // Log the event object
-
-
-    }
+//    @EventHandler
+//    public void onClientBookingRegisteredEvent(ClientBookingRegisteredEvent event){
+//        System.out.println("EventHandler to write in DB received ClientBookingRegisteredEvent command ");
+//        System.out.println("Event details: " + event); // Log the event object
+//
+//
+//    }
 
     @EventHandler
     public void onBookingCancelledDuetoRespUnavailable(BookingCancelledEvent event, ReplayStatus replayStatus){
