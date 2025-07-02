@@ -120,6 +120,11 @@
             <version>13.5</version>
             <scope>compile</scope>
         </dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-tracing-bridge-otel</artifactId>
@@ -128,6 +133,18 @@
 			<groupId>io.opentelemetry</groupId>
 			<artifactId>opentelemetry-exporter-otlp</artifactId>
 		</dependency>
+
+<!--		<dependency>-->
+<!--			 <groupId>io.opentelemetry</groupId>-->
+<!--			 <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>-->
+<!--		</dependency>-->
+
+		<!--		<dependency>-->
+<!--			<groupId>org.axonframework.extensions.tracing</groupId>-->
+<!--			<artifactId>axon-tracing-spring-boot-starter</artifactId>-->
+<!--			<version>4.4</version>-->
+<!--		</dependency>-->
+
 
 
 

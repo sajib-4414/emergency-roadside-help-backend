@@ -11,15 +11,19 @@ import com.emergency.roadside.help.client_booking_backend.model.booking.BookingS
 import com.emergency.roadside.help.common_module.commonmodels.Priority;
 import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import com.emergency.roadside.help.common_module.saga.events.ResponderReservedAndNotifiedEvent;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
+import org.axonframework.messaging.annotation.MetaDataValue;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.spring.stereotype.Aggregate;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 
@@ -49,24 +53,32 @@ public class BookingAggregate {
 
     private String address;
 
+    @Autowired
+    private  ObservationRegistry observationRegistry;
+
 
     @CommandHandler
-    public BookingAggregate(CreateBookingCommand command){
+    public BookingAggregate(CreateBookingCommand command, @MetaDataValue(value = "traceId", required = false) String traceId){
+        Observation.createNotStarted("handle-create-booking-command", observationRegistry)
+                .contextualName("CommandHandler:CreateBookingCommand")
+                .start()
+                .observe(()->{
+                    //validate the command before storing it in eventstore, which is primary write DB
+                    //check things like if status is good, priority is good, if applicable
+                    // Check if the aggregate already exists, handle it in saga
+                    //this i think is only applicable for the first command hanlder of an aggregate
+                    if (this.bookingId != null) {
+                        throw new IllegalStateException("Booking already exists for ID: " + this.bookingId);
+                    }
+
+                    //if all good persist to event db that booking created
+                    BookingCreatedEvent event = BookingCreatedEvent.builder().build();
+                    BeanUtils.copyProperties(command,event );
+                    event.setStatus(BookingStatus.CREATED);
+                    AggregateLifecycle.apply(event);
+                });
 
 
-        //validate the command before storing it in eventstore, which is primary write DB
-        //check things like if status is good, priority is good, if applicable
-        // Check if the aggregate already exists, handle it in saga
-        //this i think is only applicable for the first command hanlder of an aggregate
-        if (this.bookingId != null) {
-            throw new IllegalStateException("Booking already exists for ID: " + this.bookingId);
-        }
-
-        //if all good persist to event db that booking created
-        BookingCreatedEvent event = BookingCreatedEvent.builder().build();
-        BeanUtils.copyProperties(command,event );
-        event.setStatus(BookingStatus.CREATED);
-        AggregateLifecycle.apply(event);
     }
 
     //to update the event on eventstore for replaying

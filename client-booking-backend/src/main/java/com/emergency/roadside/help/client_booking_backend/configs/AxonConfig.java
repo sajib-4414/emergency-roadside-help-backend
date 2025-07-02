@@ -1,8 +1,15 @@
 package com.emergency.roadside.help.client_booking_backend.configs;
 
 import com.emergency.roadside.help.client_booking_backend.cqrs.events.BookingEventHandler;
+import com.emergency.roadside.help.client_booking_backend.tracing.TracingCorrelationDataInterceptor;
+import com.emergency.roadside.help.client_booking_backend.tracing.TracingEventDispatchInterceptor;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.security.AnyTypePermission;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.semconv.ResourceAttributes;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.DefaultCommandGateway;
 import org.axonframework.commandhandling.gateway.IntervalRetryScheduler;
@@ -12,7 +19,10 @@ import org.axonframework.config.ConfigurationScopeAwareProvider;
 import org.axonframework.config.ConfigurerModule;
 import org.axonframework.deadline.DeadlineManager;
 import org.axonframework.deadline.SimpleDeadlineManager;
+import org.axonframework.eventhandling.EventBus;
 import org.axonframework.eventhandling.deadletter.jpa.JpaSequencedDeadLetterQueue;
+import org.axonframework.eventhandling.gateway.DefaultEventGateway;
+import org.axonframework.eventhandling.gateway.EventGateway;
 import org.axonframework.serialization.Serializer;
 import org.axonframework.serialization.xml.XStreamSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,12 +62,54 @@ public class AxonConfig {
 //                .build();
 //    }
 
+//    @Bean
+//    public DefaultCommandGateway commandGateway(CommandBus commandBus, CustomIntervalRetryScheduler retryScheduler) {
+//        return DefaultCommandGateway.builder()
+//                .commandBus(commandBus)
+//                .retryScheduler(retryScheduler)
+//                .build();
+//    }
+
+    //for axon tracing
+@Bean
+public DefaultCommandGateway commandGateway(CommandBus commandBus,
+                                            CustomIntervalRetryScheduler retryScheduler,
+                                            TracingCorrelationDataInterceptor tracingInterceptor) {
+    // Register the tracing interceptor
+    commandBus.registerDispatchInterceptor(tracingInterceptor);
+
+    // Build and return the gateway
+    return DefaultCommandGateway.builder()
+            .commandBus(commandBus)
+            .retryScheduler(retryScheduler)
+            .build();
+}
+
     @Bean
-    public DefaultCommandGateway commandGateway(CommandBus commandBus, CustomIntervalRetryScheduler retryScheduler) {
-        return DefaultCommandGateway.builder()
-                .commandBus(commandBus)
-                .retryScheduler(retryScheduler)
+    public EventGateway eventGateway(EventBus eventBus,
+                                     TracingEventDispatchInterceptor tracingInterceptor) {
+        eventBus.registerDispatchInterceptor(tracingInterceptor);
+        return DefaultEventGateway.builder()
+                .eventBus(eventBus)
                 .build();
+    }
+
+
+    @Bean
+    public ResourceProvider tracingResourceProvider() {
+        return new ResourceProvider() {
+            @Override
+            public Resource createResource(ConfigProperties config) {
+                return Resource.create(
+                        Attributes.of(ResourceAttributes.SERVICE_NAME, "client-jaeger-exporter")
+                );
+            }
+
+            @Override
+            public int order() {
+                return 0;
+            }
+        };
     }
 
     @Bean

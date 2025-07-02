@@ -15,11 +15,14 @@ import com.emergency.roadside.help.client_booking_backend.model.vehicle.VehicleR
 import com.emergency.roadside.help.client_booking_backend.services.CacheService;
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
 import com.emergency.roadside.help.common_module.saga.events.ResponderReservedAndNotifiedEvent;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventhandling.ReplayStatus;
+import org.axonframework.messaging.annotation.MetaDataValue;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.queryhandling.QueryHandler;
 import org.axonframework.queryhandling.QueryUpdateEmitter;
@@ -37,37 +40,47 @@ public class BookingEventHandler {
     private CacheService cacheService;
     private QueryUpdateEmitter queryUpdateEmitter;
 
+    private final ObservationRegistry observationRegistry;
+
     @EventHandler
-    public void onBookingCreatedEvent(BookingCreatedEvent event, ReplayStatus replayStatus){
+    public void onBookingCreatedEvent(BookingCreatedEvent event, ReplayStatus replayStatus, @MetaDataValue("traceId") String traceId){
 
-//        if(true)
-//            throw new NullPointerException();
+        //for tracing
+        Observation.createNotStarted("handle-booking-created-event", observationRegistry)
+                .contextualName("EventHandler:BookingCreatedEvent")
+                .start()
+                .observe(()->{
+                    //ensure this create is fired only if booking does not exist
+                    BookingRequest br = bookingRequestRepository.findByBookingId(event.getBookingId());
+                    if(br != null) {
+                        log.info("booking was already created before with booking id"+event.getBookingId());
+                        log.info("skipping persisting to db");
+                        return;
+                    }
 
-        //ensure this create is fired only if booking does not exist
-        BookingRequest br = bookingRequestRepository.findByBookingId(event.getBookingId());
-        if(br != null) {
-            log.info("booking was already created before with booking id"+event.getBookingId());
-            log.info("skipping persisting to db");
-            return;
-        }
+                    System.out.println("EventHandler to write in DB received BookingCreatedEvent command ");
+                    System.out.println("Event details: " + event); // Log the event object
+                    BookingRequest bookingRequest = new BookingRequest();
+                    BeanUtils.copyProperties(event,bookingRequest);
+                    bookingRequest.setRequestedBy(clientRepository.findById(event.getClientId()).get());//we should already have a valid client id here
+                    bookingRequest.setVehicle(vehicleRepository.findById(event.getVehicleId()).get()); //we should aready have a valid vehicle id here
+                    log.info("printing the object before persisting....");
+                    log.info(bookingRequest.toString());
+                    log.info("status is"+bookingRequest.getStatus());
+                    bookingRequestRepository.save(bookingRequest);
+                    BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest);
+                    cacheService.putBookingToCache(statusResponse);
 
-        System.out.println("EventHandler to write in DB received BookingCreatedEvent command ");
-        System.out.println("Event details: " + event); // Log the event object
-        BookingRequest bookingRequest = new BookingRequest();
-        BeanUtils.copyProperties(event,bookingRequest);
-        bookingRequest.setRequestedBy(clientRepository.findById(event.getClientId()).get());//we should already have a valid client id here
-        bookingRequest.setVehicle(vehicleRepository.findById(event.getVehicleId()).get()); //we should aready have a valid vehicle id here
-        log.info("printing the object before persisting....");
-        log.info(bookingRequest.toString());
-        log.info("status is"+bookingRequest.getStatus());
-        bookingRequestRepository.save(bookingRequest);
-        BookingStatusResponse statusResponse = new BookingStatusResponse(bookingRequest);
-        cacheService.putBookingToCache(statusResponse);
+                    //for subscription query
+                    queryUpdateEmitter.emit(BookingStatusQuery.class,
+                            query -> query.getBookingId().equals(event.getBookingId()),
+                            statusResponse);
+                });
 
-        //for subscription query
-        queryUpdateEmitter.emit(BookingStatusQuery.class,
-                query -> query.getBookingId().equals(event.getBookingId()),
-                statusResponse);
+        //end for tracing
+
+
+
 
     }
 
@@ -138,6 +151,7 @@ public class BookingEventHandler {
 
         System.out.println("EventHandler to write in DB received BookingCancelledDuetoRespUnavailable command ");
         System.out.println("Event details: " + event); // Log the event object
+
         BookingRequest bookingRequest = bookingRequestRepository.findByBookingId(event.getBookingId());
         if(bookingRequest !=null){
             BookingStatus newStatus = event.getStatus();//this contains RESPONDER_SERVICE_UNAVAILABLE

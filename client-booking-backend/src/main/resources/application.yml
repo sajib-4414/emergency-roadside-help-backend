@@ -50,6 +50,16 @@ management:
       probability: 1.0
 
 otel:
+  service:
+    name: client-jaeger-exporter
   exporter:
     otlp:
-      endpoint: http://localhost:4317
+      endpoint: http://localhost:4318
+      protocol: http/protobuf
+  propagators: tracecontext,baggage
+logging:
+  level:
+    io:
+      micrometer: DEBUG
+  pattern:
+    level: "[traceId=%X{traceId} spanId=%X{spanId}] %5p"
