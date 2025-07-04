@@ -29,12 +29,23 @@
 	<properties>
 		<java.version>23</java.version>
 	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>io.opentelemetry.instrumentation</groupId>
+				<artifactId>opentelemetry-instrumentation-bom</artifactId>
+				<version>2.17.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
-		<dependency>
-			<groupId>com.emergency.roadside.help</groupId>
-			<artifactId>common_module</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>com.emergency.roadside.help</groupId>-->
+<!--			<artifactId>common_module</artifactId>-->
+<!--			<version>0.0.1-SNAPSHOT</version>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -48,7 +59,17 @@
 		<dependency>
 			<groupId>org.axonframework</groupId>
 			<artifactId>axon-spring-boot-starter</artifactId>
-			<version>4.10.3</version>
+			<version>4.11.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.axonframework</groupId>
+			<artifactId>axon-tracing-opentelemetry</artifactId>
+			<version>4.7.2</version>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry.instrumentation</groupId>
+			<artifactId>opentelemetry-spring-boot-starter</artifactId>
+
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -120,14 +141,45 @@
             <version>13.5</version>
             <scope>compile</scope>
         </dependency>
+
 		<dependency>
-			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-tracing-bridge-otel</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-exporter-otlp</artifactId>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>io.micrometer</groupId>-->
+<!--			<artifactId>micrometer-tracing-bridge-otel</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>io.opentelemetry</groupId>-->
+<!--			<artifactId>opentelemetry-exporter-otlp</artifactId>-->
+<!--		</dependency>-->
+		<!-- https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-api -->
+
+<!--		<dependency>-->
+<!--			<groupId>org.axonframework</groupId>-->
+<!--			<artifactId>axon-tracing-opentelemetry</artifactId>-->
+<!--			<version>4.9.0</version>-->
+<!--		</dependency>-->
+		<!-- https://mvnrepository.com/artifact/org.axonframework.extensions.tracing/axon-tracing-spring-boot-starter -->
+<!--		<dependency>-->
+<!--			<groupId>org.axonframework.extensions.tracing</groupId>-->
+<!--			<artifactId>axon-tracing-spring-boot-starter</artifactId>-->
+<!--			<version>4.11.0</version>-->
+<!--		</dependency>-->
+
+
+		<!--		<dependency>-->
+<!--			 <groupId>io.opentelemetry</groupId>-->
+<!--			 <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>-->
+<!--		</dependency>-->
+
+		<!--		<dependency>-->
+<!--			<groupId>org.axonframework.extensions.tracing</groupId>-->
+<!--			<artifactId>axon-tracing-spring-boot-starter</artifactId>-->
+<!--			<version>4.4</version>-->
+<!--		</dependency>-->
+
 
 
 

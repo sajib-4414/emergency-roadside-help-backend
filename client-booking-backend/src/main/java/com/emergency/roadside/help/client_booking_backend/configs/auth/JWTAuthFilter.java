@@ -1,8 +1,9 @@
 package com.emergency.roadside.help.client_booking_backend.configs.auth;
 
 
-import com.emergency.roadside.help.common_module.exceptions.ErrorDTO;
-import com.emergency.roadside.help.common_module.exceptions.ErrorHttpResponse;
+
+import com.emergency.roadside.help.client_booking_backend.common_module.ErrorDTO;
+import com.emergency.roadside.help.client_booking_backend.common_module.ErrorHttpResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;

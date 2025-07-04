@@ -1,0 +1,90 @@
+package com.emergency.roadside.help.client_booking_backend.configs;
+
+import org.axonframework.messaging.Message;
+import org.axonframework.tracing.Span;
+import org.axonframework.tracing.SpanAttributesProvider;
+import org.axonframework.tracing.SpanFactory;
+import org.axonframework.tracing.SpanScope;
+
+import java.util.function.Supplier;
+
+public class SimpleLoggingSpanFactory implements SpanFactory {
+
+    @Override
+    public Span createRootTrace(Supplier<String> operationNameSupplier) {
+        String name = operationNameSupplier.get();
+        System.out.println("[TRACE START] " + name + " (root)");
+        return new SimpleSpan(name, true);
+    }
+
+    @Override
+    public <M extends Message<?>> M propagateContext(M message) {
+        // Not tracing context propagation here
+        return message;
+    }
+
+    @Override
+    public Span createInternalSpan(Supplier<String> operationNameSupplier) {
+        String name = operationNameSupplier.get();
+        System.out.println("[SPAN START] " + name + " (internal)");
+        return new SimpleSpan(name, false);
+    }
+
+    @Override
+    public Span createInternalSpan(Supplier<String> operationNameSupplier, Message<?> message) {
+        return null;
+    }
+
+    @Override
+    public void registerSpanAttributeProvider(SpanAttributesProvider provider) {
+
+    }
+
+    @Override
+    public Span createHandlerSpan(Supplier<String> operationNameSupplier, Message<?> parentMessage,
+                                  boolean isChildTrace, Message<?>... linkedParents) {
+        String name = operationNameSupplier.get();
+        System.out.println("[HANDLER START] " + name +
+                (isChildTrace ? " (child trace)" : "") + " for message " + parentMessage.getIdentifier());
+        return new SimpleSpan(name, false);
+    }
+
+    @Override
+    public Span createDispatchSpan(Supplier<String> operationNameSupplier, Message<?> parentMessage,
+                                   Message<?>... linkedParents) {
+        String name = operationNameSupplier.get();
+        System.out.println("[DISPATCH START] " + name + " from " + parentMessage.getIdentifier());
+        return new SimpleSpan(name, false);
+    }
+
+    private static class SimpleSpan implements Span {
+        private final String name;
+        private final boolean root;
+
+        SimpleSpan(String name, boolean root) {
+            this.name = name;
+            this.root = root;
+        }
+
+        @Override
+        public Span start() {
+            return this;
+        }
+
+        @Override
+        public SpanScope makeCurrent() {
+            // No-op scope: no thread context handled
+            return () -> {};
+        }
+
+        @Override
+        public void end() {
+            System.out.println("[SPAN END] " + name + (root ? " (root)" : ""));
+        }
+
+        @Override
+        public Span recordException(Throwable t) {
+            return null;
+        }
+    }
+}

@@ -1,5 +1,7 @@
 package com.emergency.roadside.help.client_booking_backend.cqrs.aggregate;
 
+import com.emergency.roadside.help.client_booking_backend.common_module.commonmodels.Priority;
+import com.emergency.roadside.help.client_booking_backend.common_module.commonmodels.ServiceType;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CancelBookingCommand;
 
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
@@ -8,18 +10,22 @@ import com.emergency.roadside.help.client_booking_backend.cqrs.commads.UpdateBoo
 
 import com.emergency.roadside.help.client_booking_backend.cqrs.payload.*;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatus;
-import com.emergency.roadside.help.common_module.commonmodels.Priority;
-import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
-import com.emergency.roadside.help.common_module.saga.events.ResponderReservedAndNotifiedEvent;
+
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
+import org.axonframework.messaging.annotation.MetaDataValue;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.spring.stereotype.Aggregate;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 
@@ -50,10 +56,15 @@ public class BookingAggregate {
     private String address;
 
 
+
+
+
     @CommandHandler
-    public BookingAggregate(CreateBookingCommand command){
+    public BookingAggregate(CreateBookingCommand command, @MetaDataValue(value = "traceId", required = false) String traceId){
 
 
+        try {
+            log.info("Creating booking with ID: {}", command.getBookingId());
         //validate the command before storing it in eventstore, which is primary write DB
         //check things like if status is good, priority is good, if applicable
         // Check if the aggregate already exists, handle it in saga
@@ -67,6 +78,12 @@ public class BookingAggregate {
         BeanUtils.copyProperties(command,event );
         event.setStatus(BookingStatus.CREATED);
         AggregateLifecycle.apply(event);
+
+        log.info("Booking created successfully: {}", command.getBookingId());
+        } catch (Exception e) {
+
+            throw e;
+        }
     }
 
     //to update the event on eventstore for replaying
@@ -90,7 +107,8 @@ public class BookingAggregate {
         //validate the command before storing it in eventstore, which is primary write DB
         //check things like if status is good, priority is good, if applicable
         // Check if the aggregate already exists, handle it in saga
-
+        try {
+            log.info("Found responder for booking: {}", command.getBookingId());
 
         //if all good persist to event db that booking created
         BookingUpdatedEvent event = BookingUpdatedEvent
@@ -102,6 +120,12 @@ public class BookingAggregate {
                 .build();
 
         AggregateLifecycle.apply(event);
+
+        log.info("Booking updated with responder name successfully: {}", command.getBookingId());
+        } catch (Exception e) {
+
+            throw e;
+        }
     }
 
     @CommandHandler

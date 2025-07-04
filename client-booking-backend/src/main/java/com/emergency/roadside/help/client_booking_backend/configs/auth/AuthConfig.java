@@ -1,9 +1,10 @@
 package com.emergency.roadside.help.client_booking_backend.configs.auth;
 
 
+import com.emergency.roadside.help.client_booking_backend.common_module.customexceptions.ItemNotFoundException;
 import com.emergency.roadside.help.client_booking_backend.model.client.User;
 import com.emergency.roadside.help.client_booking_backend.model.client.UserRepository;
-import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
+
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

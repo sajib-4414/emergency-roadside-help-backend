@@ -1,9 +1,10 @@
 package com.emergency.roadside.help.client_booking_backend.configs;
 
 
-import com.emergency.roadside.help.common_module.exceptions.ErrorDTO;
-import com.emergency.roadside.help.common_module.exceptions.ErrorHttpResponse;
-import com.emergency.roadside.help.common_module.exceptions.customexceptions.*;
+
+import com.emergency.roadside.help.client_booking_backend.common_module.ErrorDTO;
+import com.emergency.roadside.help.client_booking_backend.common_module.ErrorHttpResponse;
+import com.emergency.roadside.help.client_booking_backend.common_module.customexceptions.*;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;

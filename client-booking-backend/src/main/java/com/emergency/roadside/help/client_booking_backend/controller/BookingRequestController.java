@@ -1,5 +1,8 @@
 package com.emergency.roadside.help.client_booking_backend.controller;
 
+import com.emergency.roadside.help.client_booking_backend.common_module.commonmodels.Priority;
+import com.emergency.roadside.help.client_booking_backend.common_module.customexceptions.BadDataException;
+import com.emergency.roadside.help.client_booking_backend.common_module.customexceptions.ItemNotFoundException;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.RegisterClientBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.model.booking.*;
@@ -11,9 +14,11 @@ import com.emergency.roadside.help.client_booking_backend.model.vehicle.VehicleR
 import com.emergency.roadside.help.client_booking_backend.services.CacheService;
 import com.emergency.roadside.help.client_booking_backend.services.booking.BookingRequestService;
 import com.emergency.roadside.help.client_booking_backend.services.vehicle.VehicleService;
-import com.emergency.roadside.help.common_module.commonmodels.Priority;
-import com.emergency.roadside.help.common_module.exceptions.customexceptions.BadDataException;
-import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
+
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+
+import io.opentelemetry.api.trace.Tracer;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -28,6 +33,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.emergency.roadside.help.client_booking_backend.configs.auth.AuthHelper.getCurrentUser;
+
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/bookings")
@@ -40,6 +47,8 @@ public class BookingRequestController {
     private final ModelMapper modelMapper;
     private CommandGateway commandGateway;
     private CacheService cacheService;
+    private static final Tracer tracer =
+            OpenTelemetry.noop().getTracer("order-controller");
 
     @PostMapping
     public ResponseEntity<?> createBooking(@Validated @RequestBody BookingRequestDTO payload) {
@@ -51,9 +60,16 @@ public class BookingRequestController {
 
     @PostMapping("/create-saga-booking")
     public ResponseEntity<?> createSagaBooking(@Validated @RequestBody BookingRequestDTO payload) {
+
+
+
         String uniqueBookingId = UUID.randomUUID().toString();
         User user = getCurrentUser();
         Client client = clientRepository.findByUser(user).orElseThrow(()->new ItemNotFoundException("client not found"));
+        Span span = tracer.spanBuilder("BookingRequestController.createSagaBooking")
+                .setAttribute("booking.id", uniqueBookingId)
+                .setAttribute("customer.id", client.getId())
+                .startSpan();
 
         Vehicle vehicle;
         if(payload.getVehicleId() !=null)
@@ -99,12 +115,19 @@ public class BookingRequestController {
             cacheService.putBookingToCache(statusResponse);
 
 
+
             return ResponseEntity.ok(command);
         } catch (Exception e) {
+            span.recordException(e);
+            log.error("Error creating booking: {}", e.getMessage(), e);
             System.out.println("exception happened"+e.getMessage());
             System.out.println(e.getStackTrace());
             throw new BadDataException("Client already has a booking in progress");
         }
+        finally {
+            span.end();
+        }
+
 
 
     }

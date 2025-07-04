@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.emergency.roadside.help</groupId>
 	<artifactId>common_module</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+
 	<name>Common module</name>
 	<description>Common module to keep exceptions and other shared data</description>
 	<url/>
