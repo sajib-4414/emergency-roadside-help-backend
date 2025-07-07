@@ -43,15 +43,12 @@ retry:
   interval: 5
   maxCount: 3
 
-otel:
-  traces:
-    exporter: otlp
-  metrics:
-    exporter: none
-  logs:
-    exporter: none
-#exporter:
-#  otlp:
-#    endpoint: http://localhost:4318
-#    protocol: http/protobuf
+management:
+  tracing:
+    sampling:
+      probability: 1.0
 
+otel:
+  exporter:
+    otlp:
+      endpoint: http://localhost:4317

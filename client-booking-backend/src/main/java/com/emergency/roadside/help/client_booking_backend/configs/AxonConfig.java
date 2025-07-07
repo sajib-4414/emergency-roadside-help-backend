@@ -1,12 +1,8 @@
 package com.emergency.roadside.help.client_booking_backend.configs;
 
 import com.emergency.roadside.help.client_booking_backend.cqrs.events.BookingEventHandler;
-import com.emergency.roadside.help.client_booking_backend.tracing.TracingCorrelationDataInterceptor;
-import com.emergency.roadside.help.client_booking_backend.tracing.TracingEventDispatchInterceptor;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.security.AnyTypePermission;
-
-import io.opentelemetry.api.OpenTelemetry;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.DefaultCommandGateway;
 import org.axonframework.commandhandling.gateway.IntervalRetryScheduler;
@@ -22,16 +18,12 @@ import org.axonframework.eventhandling.gateway.DefaultEventGateway;
 import org.axonframework.eventhandling.gateway.EventGateway;
 import org.axonframework.serialization.Serializer;
 import org.axonframework.serialization.xml.XStreamSerializer;
-import org.axonframework.tracing.LoggingSpanFactory;
-import org.axonframework.tracing.MultiSpanFactory;
-import org.axonframework.tracing.SpanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -52,7 +44,6 @@ public class AxonConfig {
                 .xStream(xStream)
                 .build();
     }
-
 
 //    @Bean
 //    public IntervalRetryScheduler retryScheduler() {
@@ -96,14 +87,19 @@ public DefaultCommandGateway commandGateway(CommandBus commandBus,
     }
 
     @Bean
-    public SpanFactory spanFactory() {
-        //return new SimpleLoggingSpanFactory();
-         org.axonframework.tracing.op
-        return new MultiSpanFactory(
-                Arrays.asList(
-                        LoggingSpanFactory.INSTANCE
-                )
-        );
+    public ConfigurerModule deadLetterConfigurerModule(RetryConstrainedEnqueuePolicy deadLetterEnqueuePolicy){
+        return configurer -> configurer.eventProcessing()
+                .registerDeadLetterQueue(
+                "bookings",
+                configuration -> JpaSequencedDeadLetterQueue.builder()
+                        .processingGroup("bookings")
+                        .serializer(configuration.eventSerializer())
+                        .transactionManager(configuration.getComponent(TransactionManager.class))
+                        .entityManagerProvider(configuration.getComponent(EntityManagerProvider.class))
+
+                        .build()
+        )
+                .registerDeadLetterPolicy("bookings",configuration -> deadLetterEnqueuePolicy);
     }
 
 

@@ -181,6 +181,18 @@
 <!--		</dependency>-->
 
 
+<!--		<dependency>-->
+<!--			 <groupId>io.opentelemetry</groupId>-->
+<!--			 <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>-->
+<!--		</dependency>-->
+
+		<!--		<dependency>-->
+<!--			<groupId>org.axonframework.extensions.tracing</groupId>-->
+<!--			<artifactId>axon-tracing-spring-boot-starter</artifactId>-->
+<!--			<version>4.4</version>-->
+<!--		</dependency>-->
+
+
 
 
 	</dependencies>
