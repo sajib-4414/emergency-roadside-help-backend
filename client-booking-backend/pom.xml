@@ -146,53 +146,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
-<!--		<dependency>-->
-<!--			<groupId>io.micrometer</groupId>-->
-<!--			<artifactId>micrometer-tracing-bridge-otel</artifactId>-->
-<!--		</dependency>-->
-<!--		<dependency>-->
-<!--			<groupId>io.opentelemetry</groupId>-->
-<!--			<artifactId>opentelemetry-exporter-otlp</artifactId>-->
-<!--		</dependency>-->
-		<!-- https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-api -->
-
-<!--		<dependency>-->
-<!--			<groupId>org.axonframework</groupId>-->
-<!--			<artifactId>axon-tracing-opentelemetry</artifactId>-->
-<!--			<version>4.9.0</version>-->
-<!--		</dependency>-->
-		<!-- https://mvnrepository.com/artifact/org.axonframework.extensions.tracing/axon-tracing-spring-boot-starter -->
-<!--		<dependency>-->
-<!--			<groupId>org.axonframework.extensions.tracing</groupId>-->
-<!--			<artifactId>axon-tracing-spring-boot-starter</artifactId>-->
-<!--			<version>4.11.0</version>-->
-<!--		</dependency>-->
-
-
-		<!--		<dependency>-->
-<!--			 <groupId>io.opentelemetry</groupId>-->
-<!--			 <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>-->
-<!--		</dependency>-->
-
-		<!--		<dependency>-->
-<!--			<groupId>org.axonframework.extensions.tracing</groupId>-->
-<!--			<artifactId>axon-tracing-spring-boot-starter</artifactId>-->
-<!--			<version>4.4</version>-->
-<!--		</dependency>-->
-
-
-<!--		<dependency>-->
-<!--			 <groupId>io.opentelemetry</groupId>-->
-<!--			 <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>-->
-<!--		</dependency>-->
-
-		<!--		<dependency>-->
-<!--			<groupId>org.axonframework.extensions.tracing</groupId>-->
-<!--			<artifactId>axon-tracing-spring-boot-starter</artifactId>-->
-<!--			<version>4.4</version>-->
-<!--		</dependency>-->
-
-
 
 
 	</dependencies>

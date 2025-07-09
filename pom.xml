@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <groupId>com.yourcompany</groupId>
+    <artifactId>microservices-parent</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    
+    <modules>
+        <module>common_module</module>
+        <module>assistance-service-backend</module>
+        <module>client-booking-backend</module>
+        <module>responder-assignment-backend</module>
+    </modules>
+    
+    <properties>
+        <spring.boot.version>3.2.0</spring.boot.version>
+        <axon.version>4.9.0</axon.version>
+    </properties>
+    
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

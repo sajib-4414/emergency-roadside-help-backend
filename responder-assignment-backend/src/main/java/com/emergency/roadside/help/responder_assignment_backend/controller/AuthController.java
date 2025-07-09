@@ -1,6 +1,7 @@
 package com.emergency.roadside.help.responder_assignment_backend.controller;
 
-import com.emergency.roadside.help.common_module.commonexternal.AuthResponse;
+
+import com.emergency.roadside.help.responder_assignment_backend.common_module.commonexternal.AuthResponse;
 import com.emergency.roadside.help.responder_assignment_backend.model.auth.RegisterDTO;
 import com.emergency.roadside.help.responder_assignment_backend.services.AuthService;
 import lombok.AllArgsConstructor;

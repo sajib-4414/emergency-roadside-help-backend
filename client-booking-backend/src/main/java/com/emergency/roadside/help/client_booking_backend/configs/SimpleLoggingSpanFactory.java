@@ -6,6 +6,7 @@ import org.axonframework.tracing.SpanAttributesProvider;
 import org.axonframework.tracing.SpanFactory;
 import org.axonframework.tracing.SpanScope;
 
+
 import java.util.function.Supplier;
 
 public class SimpleLoggingSpanFactory implements SpanFactory {

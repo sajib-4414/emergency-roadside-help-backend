@@ -1,8 +1,9 @@
 package com.emergency.roadside.help.responder_assignment_backend.services;
 
 
-import com.emergency.roadside.help.common_module.commonexternal.ExternalUser;
-import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
+
+import com.emergency.roadside.help.responder_assignment_backend.common_module.commonexternal.ExternalUser;
+import com.emergency.roadside.help.responder_assignment_backend.common_module.exceptions.customexceptions.ItemNotFoundException;
 import com.emergency.roadside.help.responder_assignment_backend.model.responder.*;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;

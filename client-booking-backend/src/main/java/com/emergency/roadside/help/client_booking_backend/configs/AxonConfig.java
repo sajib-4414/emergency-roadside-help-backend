@@ -18,6 +18,7 @@ import org.axonframework.eventhandling.gateway.DefaultEventGateway;
 import org.axonframework.eventhandling.gateway.EventGateway;
 import org.axonframework.serialization.Serializer;
 import org.axonframework.serialization.xml.XStreamSerializer;
+import org.axonframework.tracing.SpanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 
@@ -27,6 +28,7 @@ import org.springframework.context.annotation.Primary;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.axonframework.tracing.opentelemetry.OpenTelemetrySpanFactory;
 
 @Configuration
 public class AxonConfig {
@@ -110,6 +112,16 @@ public DefaultCommandGateway commandGateway(CommandBus commandBus,
 //                .openTelemetry(openTelemetry)
 //                .build();
 //    }
+
+//    @Bean
+//    public SpanFactory spanFactory() {
+//        return new SimpleLoggingSpanFactory();
+//    }
+
+    @Bean
+    public SpanFactory spanFactory() {
+        return OpenTelemetrySpanFactory.builder().build();
+    }
 
 
     //TODO /*  Not sure if I need it, have to check*/

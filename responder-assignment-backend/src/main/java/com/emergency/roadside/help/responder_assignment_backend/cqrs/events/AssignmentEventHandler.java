@@ -1,8 +1,9 @@
 package com.emergency.roadside.help.responder_assignment_backend.cqrs.events;
 
-import com.emergency.roadside.help.common_module.saga.events.ResponderAssignedEvent;
-import com.emergency.roadside.help.common_module.saga.events.ResponderAssignmentCancelledEvent;
-import com.emergency.roadside.help.common_module.saga.events.ResponderReservedAndNotifiedEvent;
+
+import com.emergency.roadside.help.responder_assignment_backend.common_module.saga.events.ResponderAssignedEvent;
+import com.emergency.roadside.help.responder_assignment_backend.common_module.saga.events.ResponderAssignmentCancelledEvent;
+import com.emergency.roadside.help.responder_assignment_backend.common_module.saga.events.ResponderReservedAndNotifiedEvent;
 import com.emergency.roadside.help.responder_assignment_backend.model.assignment.Assignment;
 import com.emergency.roadside.help.responder_assignment_backend.model.assignment.AssignmentRepository;
 import com.emergency.roadside.help.responder_assignment_backend.model.responder.ResponderRepository;

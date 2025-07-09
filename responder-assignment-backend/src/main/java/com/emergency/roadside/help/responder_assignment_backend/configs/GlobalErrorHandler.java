@@ -1,8 +1,9 @@
 package com.emergency.roadside.help.responder_assignment_backend.configs;
 
-import com.emergency.roadside.help.common_module.exceptions.ErrorDTO;
-import com.emergency.roadside.help.common_module.exceptions.ErrorHttpResponse;
-import com.emergency.roadside.help.common_module.exceptions.customexceptions.*;
+
+import com.emergency.roadside.help.responder_assignment_backend.common_module.exceptions.ErrorDTO;
+import com.emergency.roadside.help.responder_assignment_backend.common_module.exceptions.ErrorHttpResponse;
+import com.emergency.roadside.help.responder_assignment_backend.common_module.exceptions.customexceptions.*;
 import feign.RetryableException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;

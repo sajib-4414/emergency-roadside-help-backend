@@ -49,6 +49,22 @@ management:
       probability: 1.0
 
 otel:
+  instumentation:
+    jdbc:
+      enabled: false
+  resource:
+    attributes:
+      service:
+        name: ClientBookingBackendJaeger
   exporter:
     otlp:
       endpoint: http://localhost:4317
+      protocol: grpc
+#  metrics:
+#    exporter: none
+  logs:
+    exporter: none
+
+axon:
+  tracing:
+    nested-handlers: true
