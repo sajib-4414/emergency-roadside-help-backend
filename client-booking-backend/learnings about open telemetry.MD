@@ -66,6 +66,9 @@ there is also open telemetry java agent, this is the best way(but cumbersome!!) 
 u will also see jaeger needs to be passed some parameters such as otlp enabled true something like that, but if u run the jaeger windows
 exe file, these parameters including port mapping are already done. 
 
+also u need to provide this as VM options in intellij otherwise the Axon command spans will be created in open telemtery(it does in loggin span implementation thouigh)
+-Dotel.java.global-autoconfigure.enabled=true
+
 ## Errors and how to solve:
 **Failed to export logs**:
 u can see an error in terminal that

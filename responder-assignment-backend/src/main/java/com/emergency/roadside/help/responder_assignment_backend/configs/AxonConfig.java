@@ -2,6 +2,7 @@ package com.emergency.roadside.help.responder_assignment_backend.configs;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.security.AnyTypePermission;
+import org.axonframework.config.EventProcessingConfigurer;
 import org.axonframework.serialization.Serializer;
 import org.axonframework.serialization.xml.XStreamSerializer;
 import org.springframework.context.annotation.Bean;
@@ -24,4 +25,5 @@ public class AxonConfig {
                 .xStream(xStream)
                 .build();
     }
+
 }

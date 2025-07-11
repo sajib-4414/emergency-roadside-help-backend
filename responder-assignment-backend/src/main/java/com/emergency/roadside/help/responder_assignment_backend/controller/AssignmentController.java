@@ -30,7 +30,7 @@ public class AssignmentController {
     private AssignmentService assignmentService;
 
     @PostMapping("/accept-request/{assignmentId}")
-    public ResponseEntity<AssignmentStatusResponse> acceptAssignment(@PathVariable String assignmentId) {
+    public ResponseEntity<AssignmentStatusResponse> acceptAssignment(@PathVariable("assignmentId") String assignmentId) {
         return ResponseEntity.ok(assignmentService.acceptAssignment(assignmentId));
     }
 
@@ -40,7 +40,7 @@ public class AssignmentController {
     }
 
     @GetMapping("/assignment-by-id/{assignmentId}")
-    public ResponseEntity<Assignment> getAssignmentDetail(@PathVariable String assignmentId){
+    public ResponseEntity<Assignment> getAssignmentDetail(@PathVariable("assignmentId") String assignmentId){
         return ResponseEntity.ok(assignmentService.getAssignmentDetailByAssignmentId(assignmentId));
     }
 

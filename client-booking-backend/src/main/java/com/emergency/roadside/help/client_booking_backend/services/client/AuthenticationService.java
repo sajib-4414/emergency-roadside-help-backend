@@ -1,9 +1,10 @@
 package com.emergency.roadside.help.client_booking_backend.services.client;
 
-import com.emergency.roadside.help.client_booking_backend.common_module.customexceptions.ItemNotFoundException;
+
 import com.emergency.roadside.help.client_booking_backend.configs.auth.JWTService;
 import com.emergency.roadside.help.client_booking_backend.model.client.*;
 
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

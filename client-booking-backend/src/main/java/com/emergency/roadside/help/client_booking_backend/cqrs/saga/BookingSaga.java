@@ -1,12 +1,12 @@
 package com.emergency.roadside.help.client_booking_backend.cqrs.saga;
 
-import com.emergency.roadside.help.client_booking_backend.common_module.saga.commands.AssistanceCreatedEvent;
-import com.emergency.roadside.help.client_booking_backend.common_module.saga.commands.CancelResponderAssignmentCommand;
-import com.emergency.roadside.help.client_booking_backend.common_module.saga.commands.CreateAssistanceCommand;
-import com.emergency.roadside.help.client_booking_backend.common_module.saga.commands.FindResponderCommand;
-import com.emergency.roadside.help.client_booking_backend.common_module.saga.events.ResponderAssignedEvent;
-import com.emergency.roadside.help.client_booking_backend.common_module.saga.events.ResponderAssignmentCancelledEvent;
-import com.emergency.roadside.help.client_booking_backend.common_module.saga.events.ResponderReservedAndNotifiedEvent;
+import com.emergency.roadside.help.common_module.saga.commands.AssistanceCreatedEvent;
+import com.emergency.roadside.help.common_module.saga.commands.CancelResponderAssignmentCommand;
+import com.emergency.roadside.help.common_module.saga.commands.CreateAssistanceCommand;
+import com.emergency.roadside.help.common_module.saga.commands.FindResponderCommand;
+import com.emergency.roadside.help.common_module.saga.events.ResponderAssignedEvent;
+import com.emergency.roadside.help.common_module.saga.events.ResponderAssignmentCancelledEvent;
+import com.emergency.roadside.help.common_module.saga.events.ResponderReservedAndNotifiedEvent;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CancelBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.UpdateBookingWithResponderAssignedWaitingToAcceptCommand;
@@ -57,6 +57,7 @@ public class BookingSaga {
 
     private static final List<Long>  delaySchedule = Arrays.asList(5000L, 10000L, 20000L);
     private Map<String, String > bookingAndDeadLineIDs = new HashMap<>();
+    private static final Integer DEADLINE_IN_MILIS_FOR_FINDING_RESPONDER = 50000;
     /*
 Why Not Use clientId as the associationProperty?
 Scope Mismatch:
@@ -331,7 +332,7 @@ the booking process, not the client.
         //now we start the deadline and wait
         //also start a deadline to not wait indefinitely for driver acceptance
         String deadlineId = deadlineManager.schedule(
-                Duration.ofMillis(15000), "findResponderDeadline",
+                Duration.ofMillis(DEADLINE_IN_MILIS_FOR_FINDING_RESPONDER), "findResponderDeadline",
                 new DeadlineForFindResponderPayload(event.getBookingId())
         );
         if(bookingAndDeadLineIDs == null)

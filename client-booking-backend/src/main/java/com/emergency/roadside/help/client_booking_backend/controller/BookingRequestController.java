@@ -2,7 +2,6 @@ package com.emergency.roadside.help.client_booking_backend.controller;
 
 
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
-import com.emergency.roadside.help.client_booking_backend.cqrs.commads.RegisterClientBookingCommand;
 import com.emergency.roadside.help.client_booking_backend.model.booking.*;
 import com.emergency.roadside.help.client_booking_backend.model.client.Client;
 import com.emergency.roadside.help.client_booking_backend.model.client.ClientRepository;
@@ -16,10 +15,7 @@ import com.emergency.roadside.help.client_booking_backend.services.vehicle.Vehic
 import com.emergency.roadside.help.common_module.commonmodels.Priority;
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.BadDataException;
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Span;
 
-import io.opentelemetry.api.trace.Tracer;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -150,24 +146,24 @@ public class BookingRequestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBooking(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteBooking(@PathVariable("id") Long id) {
         bookingRequestService.deleteBooking(id);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BookingRequest> updateBooking(@PathVariable Long id, @Validated @RequestBody BookingRequestDTO bookingRequestDTO) {
+    public ResponseEntity<BookingRequest> updateBooking(@PathVariable("id") Long id, @Validated @RequestBody BookingRequestDTO bookingRequestDTO) {
         BookingRequest updatedBooking = bookingRequestService.updateBooking(id, bookingRequestDTO);
         return ResponseEntity.ok(updatedBooking);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookingStatusResponse> getBookingDetails(@PathVariable Long id) throws IOException {
+    public ResponseEntity<BookingStatusResponse> getBookingDetails(@PathVariable("id") Long id) throws IOException {
         BookingStatusResponse bookingStatus = bookingRequestService.getBookingById(id);
         return ResponseEntity.ok(bookingStatus);
     }
     @GetMapping("/booking-id/{bookingId}")
-    public ResponseEntity<BookingStatusResponse> getBookingDetailsByBookingId(@PathVariable String bookingId) throws IOException {
+    public ResponseEntity<BookingStatusResponse> getBookingDetailsByBookingId(@PathVariable("bookingId") String bookingId) throws IOException {
         BookingStatusResponse bookingStatus = bookingRequestService.getBookingByBookingIdFromCacheOrDB(bookingId);
         return ResponseEntity.ok(bookingStatus);
     }

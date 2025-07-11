@@ -2,7 +2,7 @@ package com.emergency.roadside.help.client_booking_backend.model.client;
 
 
 
-import com.emergency.roadside.help.client_booking_backend.common_module.commonmodels.BaseEntity;
+import com.emergency.roadside.help.common_module.commonmodels.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

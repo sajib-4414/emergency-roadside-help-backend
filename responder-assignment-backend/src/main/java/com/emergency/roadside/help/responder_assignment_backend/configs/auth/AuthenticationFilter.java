@@ -2,11 +2,12 @@ package com.emergency.roadside.help.responder_assignment_backend.configs.auth;
 
 
 
-import com.emergency.roadside.help.responder_assignment_backend.common_module.commonexternal.CustomUserDetails;
-import com.emergency.roadside.help.responder_assignment_backend.common_module.commonexternal.ExternalUser;
-import com.emergency.roadside.help.responder_assignment_backend.common_module.exceptions.ErrorDTO;
-import com.emergency.roadside.help.responder_assignment_backend.common_module.exceptions.ErrorHttpResponse;
-import com.emergency.roadside.help.responder_assignment_backend.common_module.exceptions.customexceptions.UnAuthorizedError;
+
+import com.emergency.roadside.help.common_module.commonexternal.CustomUserDetails;
+import com.emergency.roadside.help.common_module.commonexternal.ExternalUser;
+import com.emergency.roadside.help.common_module.exceptions.ErrorDTO;
+import com.emergency.roadside.help.common_module.exceptions.ErrorHttpResponse;
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.UnAuthorizedError;
 import com.emergency.roadside.help.responder_assignment_backend.external.UserServiceClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;

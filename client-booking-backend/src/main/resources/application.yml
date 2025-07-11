@@ -7,6 +7,7 @@ spring:
   logging:
     level:
       org:
+        axonframework: DEBUG
         springframework:
           data:
             redis: DEBUG
@@ -18,7 +19,7 @@ spring:
 #            descriptor:
 #              sql:
 #                BasicBinder: TRACE
-        axonframework: DEBUG
+
   flyway:
     baseline-on-migrate: true
     defaultSchema: public
@@ -43,28 +44,25 @@ retry:
   interval: 5
   maxCount: 3
 
-management:
-  tracing:
-    sampling:
-      probability: 1.0
+
 
 otel:
-  instumentation:
+  instrumentation:
     jdbc:
       enabled: false
-  resource:
-    attributes:
-      service:
-        name: ClientBookingBackendJaeger
+#  resource:
+#    attributes:
+#      service:
+#        name: ClientBookingBackendJaeger22
   exporter:
     otlp:
       endpoint: http://localhost:4317
       protocol: grpc
 #  metrics:
 #    exporter: none
-  logs:
-    exporter: none
+#  logs:
+#    exporter: none
 
-axon:
-  tracing:
-    nested-handlers: true
+#axon:
+#  tracing:
+#    nested-handlers: true

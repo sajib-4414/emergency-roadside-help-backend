@@ -1,7 +1,7 @@
 package com.emergency.roadside.help.client_booking_backend.cqrs.aggregate;
 
-import com.emergency.roadside.help.client_booking_backend.common_module.commonmodels.Priority;
-import com.emergency.roadside.help.client_booking_backend.common_module.commonmodels.ServiceType;
+import com.emergency.roadside.help.common_module.commonmodels.Priority;
+import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CancelBookingCommand;
 
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;

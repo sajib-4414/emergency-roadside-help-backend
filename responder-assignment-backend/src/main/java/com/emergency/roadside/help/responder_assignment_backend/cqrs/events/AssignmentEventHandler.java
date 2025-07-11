@@ -1,14 +1,15 @@
 package com.emergency.roadside.help.responder_assignment_backend.cqrs.events;
 
 
-import com.emergency.roadside.help.responder_assignment_backend.common_module.saga.events.ResponderAssignedEvent;
-import com.emergency.roadside.help.responder_assignment_backend.common_module.saga.events.ResponderAssignmentCancelledEvent;
-import com.emergency.roadside.help.responder_assignment_backend.common_module.saga.events.ResponderReservedAndNotifiedEvent;
+import com.emergency.roadside.help.common_module.saga.events.ResponderAssignedEvent;
+import com.emergency.roadside.help.common_module.saga.events.ResponderAssignmentCancelledEvent;
+import com.emergency.roadside.help.common_module.saga.events.ResponderReservedAndNotifiedEvent;
 import com.emergency.roadside.help.responder_assignment_backend.model.assignment.Assignment;
 import com.emergency.roadside.help.responder_assignment_backend.model.assignment.AssignmentRepository;
 import com.emergency.roadside.help.responder_assignment_backend.model.responder.ResponderRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Component
 @AllArgsConstructor
+@ProcessingGroup("assignment-event-handlers")
 public class AssignmentEventHandler {
 
     private final AssignmentRepository assignmentRepository;
@@ -55,6 +57,10 @@ public class AssignmentEventHandler {
         System.out.println("EventHandler to write in DB received ResponderAssignedEvent command ");
         System.out.println("Event details: " + event); // Log the event object
         Assignment assignment = assignmentRepository.findByBookingId(event.getBookingId());
+        if(assignment == null){
+            log.info("assignment was null cannot update the assignment handler event");
+            return;
+        }
         assignment.setAssignStatus(event.getAssignStatus());
         log.info("printing the object before saving in assignment table onResponderAssignedEvent ....");
         log.info(assignment.toString());

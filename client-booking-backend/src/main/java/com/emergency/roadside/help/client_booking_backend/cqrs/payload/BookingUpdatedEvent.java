@@ -1,6 +1,6 @@
 package com.emergency.roadside.help.client_booking_backend.cqrs.payload;
 
-import com.emergency.roadside.help.client_booking_backend.common_module.commonmodels.ServiceType;
+import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatus;
 
 import lombok.AllArgsConstructor;
