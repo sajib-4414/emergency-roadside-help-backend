@@ -40,10 +40,10 @@ beside this u also need to give a spanfactory implementation  if you don't confi
 Axon defaults to this factory—meaning no spans will ever be created or traced NoOpSpanFactory.
 
 With the simple logging span factory i created, it just prints to terminal. if u use this your span traces wont be sent anywhere but will be
-just printed.  Most likely you will need a OpenTelemetrySpanFactory to send traces to open telemetry backend like jaeger. 
-ok OpenTelemetrySpanFactory worked, sometime chatgpt and other AI says i need some other dependency, but not, the axon tracing open telemetry is all what i needed, maybe for earleier versions i needed some extra dpeenecy but not anymore.
+just printed.  you will need a OpenTelemetrySpanFactory to send traces to open telemetry backend like jaeger. 
 
-open telemtry doc says u can use the add a dependencyManagement like this, however i saw even just including as normal dependency also works.
+dependencies u need:
+this one is for repsotiroy access, if u dont have it, the dependencies will not work
 ```xml
 <dependencyManagement>
   <dependencies>
@@ -57,7 +57,18 @@ open telemtry doc says u can use the add a dependencyManagement like this, howev
   </dependencies>
 </dependencyManagement>
 ```
+```xml
+<dependency>
+			<groupId>org.axonframework</groupId>
+			<artifactId>axon-tracing-opentelemetry</artifactId>
+			<version>4.7.2</version>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry.instrumentation</groupId>
+			<artifactId>opentelemetry-spring-boot-starter</artifactId>
 
+		</dependency>
+```
 you will also see an open telemetry api dependency, as of jul2025, u dont need it. if u use the io.opentelemetry.instrumentation, that now
 already has the open telemetry api dependency. that API can be used to custom spans, parent spans etc.
 
@@ -66,8 +77,12 @@ there is also open telemetry java agent, this is the best way(but cumbersome!!) 
 u will also see jaeger needs to be passed some parameters such as otlp enabled true something like that, but if u run the jaeger windows
 exe file, these parameters including port mapping are already done. 
 
-also u need to provide this as VM options in intellij otherwise the Axon command spans will be created in open telemtery(it does in loggin span implementation thouigh)
+also u need to provide this as VM options in intellij otherwise the Axon command spans will not be created in open telemtery(it does in loggin span implementation thouigh)
 -Dotel.java.global-autoconfigure.enabled=true
+
+also another config needed as Environment variable in intellije
+OTEL_SERVICE_NAME=myservice
+otherwise u will see it shows as unknown service, the microservices
 
 ## Errors and how to solve:
 **Failed to export logs**:

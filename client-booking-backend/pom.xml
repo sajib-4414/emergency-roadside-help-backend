@@ -64,7 +64,7 @@
 		<dependency>
 			<groupId>org.axonframework</groupId>
 			<artifactId>axon-tracing-opentelemetry</artifactId>
-			<version>4.7.2</version>
+			<version>4.11.2</version>
 		</dependency>
 		<dependency>
 			<groupId>io.opentelemetry.instrumentation</groupId>
