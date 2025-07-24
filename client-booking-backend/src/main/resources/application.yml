@@ -50,19 +50,7 @@ otel:
   instrumentation:
     jdbc:
       enabled: false
-#  resource:
-#    attributes:
-#      service:
-#        name: ClientBookingBackendJaeger22
   exporter:
     otlp:
       endpoint: http://localhost:4317
       protocol: grpc
-#  metrics:
-#    exporter: none
-#  logs:
-#    exporter: none
-
-#axon:
-#  tracing:
-#    nested-handlers: true

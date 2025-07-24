@@ -23,7 +23,7 @@ public class Vehicle extends BaseEntity {
     @Column(name = "trim")
     private String trim;
 
-    @Column(name = "year")
+    @Column(name = "vehicle_year")
     private int year;
 
     @Column(name = "plate", nullable = false)
