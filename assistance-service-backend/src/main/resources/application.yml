@@ -5,6 +5,8 @@ spring:
     level:
       org:
         springframework:
+          boot:
+            autoconfigure: DEBUG
           data:
             redis: DEBUG
           security: DEBUG
@@ -36,3 +38,12 @@ server:
   port: 9093
 
 
+otel:
+  exporter:
+    otlp:
+      endpoint: http://localhost:4317
+      protocol: grpc
+  metrics:
+    exporter: none #this is to stop sending metrics, as it will fail, jaeger cannot handle metrics.
+  logs:
+    exporter: none #this is to stop sending logs, as it will fail, jaeger cannot handle logs.

@@ -2,6 +2,7 @@ package com.emergency.roadside.help.client_booking_backend.model.vehicle;
 
 
 
+
 import com.emergency.roadside.help.common_module.commonmodels.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

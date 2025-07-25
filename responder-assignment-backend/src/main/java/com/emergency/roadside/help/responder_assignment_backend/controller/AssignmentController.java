@@ -1,11 +1,7 @@
 package com.emergency.roadside.help.responder_assignment_backend.controller;
 
-import com.emergency.roadside.help.common_module.commonexternal.AuthResponse;
-import com.emergency.roadside.help.common_module.commonexternal.ExternalUser;
-import com.emergency.roadside.help.common_module.commonmodels.AssignStatus;
-import com.emergency.roadside.help.common_module.commonmodels.Priority;
-import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
-import com.emergency.roadside.help.common_module.exceptions.customexceptions.UnprocessableEntityException;
+
+
 import com.emergency.roadside.help.responder_assignment_backend.cqrs.commands.ResponderAcceptedCommand;
 import com.emergency.roadside.help.responder_assignment_backend.model.assignment.Assignment;
 import com.emergency.roadside.help.responder_assignment_backend.model.assignment.AssignmentRepository;
@@ -20,6 +16,7 @@ import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,7 +30,7 @@ public class AssignmentController {
     private AssignmentService assignmentService;
 
     @PostMapping("/accept-request/{assignmentId}")
-    public ResponseEntity<AssignmentStatusResponse> acceptAssignment(@PathVariable String assignmentId) {
+    public ResponseEntity<AssignmentStatusResponse> acceptAssignment(@PathVariable("assignmentId") String assignmentId) {
         return ResponseEntity.ok(assignmentService.acceptAssignment(assignmentId));
     }
 
@@ -43,7 +40,7 @@ public class AssignmentController {
     }
 
     @GetMapping("/assignment-by-id/{assignmentId}")
-    public ResponseEntity<Assignment> getAssignmentDetail(@PathVariable String assignmentId){
+    public ResponseEntity<Assignment> getAssignmentDetail(@PathVariable("assignmentId") String assignmentId){
         return ResponseEntity.ok(assignmentService.getAssignmentDetailByAssignmentId(assignmentId));
     }
 

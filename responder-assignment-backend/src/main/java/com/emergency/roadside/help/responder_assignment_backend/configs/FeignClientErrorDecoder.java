@@ -4,6 +4,7 @@ package com.emergency.roadside.help.responder_assignment_backend.configs;
 
 
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.*;
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
 import feign.Response;
 import feign.Util;
 import feign.codec.ErrorDecoder;

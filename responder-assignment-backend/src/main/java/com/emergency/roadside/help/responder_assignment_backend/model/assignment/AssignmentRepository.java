@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface AssignmentRepository extends JpaRepository<Assignment,Long> {
     Assignment findByBookingId(String bookingId);
-    List<Assignment> findByResponder(Responder responder);
+    List<Assignment> findAllByResponderOrderByStartTimeAsc(Responder responder);
     Assignment findByAssignmentId(String id);
     Optional<Assignment> findByAssignmentIdAndBookingId(String assignmentId, String bookingId);
 }

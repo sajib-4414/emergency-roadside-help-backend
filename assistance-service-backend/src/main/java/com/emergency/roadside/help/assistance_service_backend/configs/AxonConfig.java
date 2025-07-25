@@ -4,9 +4,14 @@ import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.security.AnyTypePermission;
 import org.axonframework.serialization.Serializer;
 import org.axonframework.serialization.xml.XStreamSerializer;
+import org.axonframework.tracing.MultiSpanFactory;
+import org.axonframework.tracing.SpanFactory;
+import org.axonframework.tracing.opentelemetry.OpenTelemetrySpanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+
+import java.util.Arrays;
 
 @Configuration
 public class AxonConfig {
@@ -23,5 +28,14 @@ public class AxonConfig {
         return XStreamSerializer.builder()
                 .xStream(xStream)
                 .build();
+    }
+    @Bean
+    public SpanFactory spanFactory() {
+        return new MultiSpanFactory(
+                Arrays.asList(
+                        //   new SimpleLoggingSpanFactory(),
+                        OpenTelemetrySpanFactory.builder().build()
+                )
+        );
     }
 }

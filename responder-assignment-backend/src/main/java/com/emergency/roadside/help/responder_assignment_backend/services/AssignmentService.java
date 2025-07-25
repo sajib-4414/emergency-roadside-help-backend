@@ -1,5 +1,6 @@
 package com.emergency.roadside.help.responder_assignment_backend.services;
 
+
 import com.emergency.roadside.help.common_module.commonexternal.ExternalUser;
 import com.emergency.roadside.help.common_module.commonmodels.AssignStatus;
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
@@ -62,8 +63,10 @@ public class AssignmentService
 
     public List<Assignment> getMyAssignments(){
         ExternalUser user = getCurrentUser();
-        Responder currentResponder = responderRepository.findByUserId(user.getId()).orElseThrow(()->new ItemNotFoundException("profile not found"));
-        return assignmentRepository.findByResponder(currentResponder);
+        Responder currentResponder = responderRepository
+                .findByUserId(user.getId())
+                .orElseThrow(()->new ItemNotFoundException("profile not found"));
+        return assignmentRepository.findAllByResponderOrderByStartTimeAsc(currentResponder);
     }
 
     public Assignment getAssignmentDetailByAssignmentId(String assignmentId){

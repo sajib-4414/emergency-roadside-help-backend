@@ -49,7 +49,7 @@ public class CQRSController {
     }
 
     @GetMapping(value = "/booking-subscription-query/{bookingId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<BookingStatusResponse> streamBookingUpdates(@PathVariable String bookingId) {
+    public Flux<BookingStatusResponse> streamBookingUpdates(@PathVariable("bookingId") String bookingId) {
         SubscriptionQueryResult<BookingStatusResponse, BookingStatusResponse> subscriptionQuery =
                 queryGateway.subscriptionQuery(
                         new BookingStatusQuery(bookingId),

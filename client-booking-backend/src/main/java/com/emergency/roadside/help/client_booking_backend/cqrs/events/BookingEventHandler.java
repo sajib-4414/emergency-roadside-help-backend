@@ -1,5 +1,6 @@
 package com.emergency.roadside.help.client_booking_backend.cqrs.events;
 
+
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.UpdateBookingWithResponderAssignedWaitingToAcceptCommand;
 import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingAssignmentDoneWaitingToAcceptEvent;
 import com.emergency.roadside.help.client_booking_backend.cqrs.payload.BookingCancelledEvent;
@@ -13,8 +14,8 @@ import com.emergency.roadside.help.client_booking_backend.model.booking.BookingS
 import com.emergency.roadside.help.client_booking_backend.model.client.ClientRepository;
 import com.emergency.roadside.help.client_booking_backend.model.vehicle.VehicleRepository;
 import com.emergency.roadside.help.client_booking_backend.services.CacheService;
+
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
-import com.emergency.roadside.help.common_module.saga.events.ResponderReservedAndNotifiedEvent;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.config.ProcessingGroup;
@@ -125,13 +126,13 @@ public class BookingEventHandler {
     }
 
     //this is for testing only
-    @EventHandler
-    public void onClientBookingRegisteredEvent(ClientBookingRegisteredEvent event){
-        System.out.println("EventHandler to write in DB received ClientBookingRegisteredEvent command ");
-        System.out.println("Event details: " + event); // Log the event object
-
-
-    }
+//    @EventHandler
+//    public void onClientBookingRegisteredEvent(ClientBookingRegisteredEvent event){
+//        System.out.println("EventHandler to write in DB received ClientBookingRegisteredEvent command ");
+//        System.out.println("Event details: " + event); // Log the event object
+//
+//
+//    }
 
     @EventHandler
     public void onBookingCancelledDuetoRespUnavailable(BookingCancelledEvent event, ReplayStatus replayStatus){

@@ -1,5 +1,7 @@
 package com.emergency.roadside.help.client_booking_backend.cqrs.aggregate;
 
+import com.emergency.roadside.help.common_module.commonmodels.Priority;
+import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CancelBookingCommand;
 
 import com.emergency.roadside.help.client_booking_backend.cqrs.commads.CreateBookingCommand;
@@ -8,9 +10,7 @@ import com.emergency.roadside.help.client_booking_backend.cqrs.commads.UpdateBoo
 
 import com.emergency.roadside.help.client_booking_backend.cqrs.payload.*;
 import com.emergency.roadside.help.client_booking_backend.model.booking.BookingStatus;
-import com.emergency.roadside.help.common_module.commonmodels.Priority;
-import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
-import com.emergency.roadside.help.common_module.saga.events.ResponderReservedAndNotifiedEvent;
+
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;

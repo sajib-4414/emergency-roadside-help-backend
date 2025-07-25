@@ -1,7 +1,6 @@
 package com.emergency.roadside.help.responder_assignment_backend.cqrs.commands;
 
-import com.emergency.roadside.help.common_module.commonmodels.Priority;
-import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

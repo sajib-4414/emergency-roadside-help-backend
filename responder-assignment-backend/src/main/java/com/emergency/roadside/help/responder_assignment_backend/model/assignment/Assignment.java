@@ -1,5 +1,6 @@
 package com.emergency.roadside.help.responder_assignment_backend.model.assignment;
 
+
 import com.emergency.roadside.help.common_module.commonmodels.AssignStatus;
 import com.emergency.roadside.help.common_module.commonmodels.ServiceType;
 import com.emergency.roadside.help.responder_assignment_backend.model.BaseEntity;

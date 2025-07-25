@@ -2,8 +2,9 @@ package com.emergency.roadside.help.assistance_service_backend.external;
 
 
 
-import com.emergency.roadside.help.assistance_service_backend.configs.FeignClientConfig;
 import com.emergency.roadside.help.common_module.commonexternal.ExternalUser;
+import com.emergency.roadside.help.assistance_service_backend.configs.FeignClientConfig;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.PostMapping;
