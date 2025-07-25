@@ -27,3 +27,9 @@ do u need transactional and rollback?
 Scenario	Required Annotations
 Default: all DB changes rolled back after test	@Transactional only is sufficient, u can still put rollback/rollback(true), wont harm
 Want to commit changes from a test (rare cases)	@Transactional plus @Rollback(false) or @Commit
+
+so in my case testcase was crashing because i had a year column in vehcile table, although changed later. but in h2 database
+year is a reserved keywrod, so it wont allow running the migration to the point where i changed the year column name.
+i tried putting the
+You can add ;NON_KEYWORDS=VALUE to JDBC URL.
+did not work. so in test i disabled flyaway and let jdbc create everything with ddl-drop
