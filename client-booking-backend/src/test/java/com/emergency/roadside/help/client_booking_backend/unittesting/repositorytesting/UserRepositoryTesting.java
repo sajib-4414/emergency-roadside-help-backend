@@ -47,6 +47,9 @@ public class UserRepositoryTesting {
         assertEquals(username, saveduser.getUsername());
 
         assertEquals(email, saveduser.getEmail());
+
+        assertEquals(userRepository.findByEmail(email).get().getEmail(),email);
+        assertEquals(userRepository.findByUsername(username).get().getUsername(),username);
     }
 
 }

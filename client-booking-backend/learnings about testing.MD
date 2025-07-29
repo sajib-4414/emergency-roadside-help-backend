@@ -33,3 +33,7 @@ year is a reserved keywrod, so it wont allow running the migration to the point 
 i tried putting the
 You can add ;NON_KEYWORDS=VALUE to JDBC URL.
 did not work. so in test i disabled flyaway and let jdbc create everything with ddl-drop
+
+## How to have code coverage?
+I am using Jacoco plugin for test coverage, i was having some issues, then i had to upgrade to latest version then error was gone.
+with jacoco in the maven, now just run mvnw clean verify, and the test report would be in the target->jacoco->index.hml
