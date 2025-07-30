@@ -10,7 +10,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.Data;
-
+/*
+* this class is meant for a thorough table client vehicles, this is only needed for
+* */
 @Entity
 @Table(name = "client_vehicles")
 @Data

@@ -31,7 +31,7 @@ public class Client extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToMany(
+    @ManyToMany( //TODO this could be wrong, a vehcile technically should belong to only one client.
 //            fetch = FetchType.LAZY
     )
     @JoinTable(

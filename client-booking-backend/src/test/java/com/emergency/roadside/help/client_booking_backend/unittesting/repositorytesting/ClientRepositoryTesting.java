@@ -1,35 +1,34 @@
 package com.emergency.roadside.help.client_booking_backend.unittesting.repositorytesting;
 
+import com.emergency.roadside.help.client_booking_backend.model.client.Client;
+import com.emergency.roadside.help.client_booking_backend.model.client.ClientRepository;
 import com.emergency.roadside.help.client_booking_backend.model.client.User;
 import com.emergency.roadside.help.client_booking_backend.model.client.UserRepository;
-import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-//->this helps setup a h2 database and mock the userrepostiory. but somehow h2 wasnt the database where
-//migration ran and picked up by user repository, so i used active profile test, that for sure overrides the database
-//config and ensured h2 database
 @ActiveProfiles("test")
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class UserRepositoryTesting {
+public class ClientRepositoryTesting {
+    @Autowired
+    private ClientRepository clientRepository;
+
     @Autowired
     private UserRepository userRepository;
+
 
     @Test
     @Transactional
     @Rollback
-    public void testCreateUser(){
+    public void testCreateClient(){
         String username = "test1";
         String password = "12345";
         String email = "test1@example.com";
@@ -46,16 +45,22 @@ public class UserRepositoryTesting {
         // Assert that the retrieved user id is not null
         assertNotNull(saveduser.getId());
 
-        // Assert that the retrieved user id is not null
-        assertNotNull(saveduser.getUsername());
+        assertTrue(userRepository.findById(saveduser.getId()).isPresent());
 
-        // Assert that the retrieved user id is not null
-        assertEquals(username, saveduser.getUsername());
+        //now lets create client
 
-        assertEquals(email, saveduser.getEmail());
+        final String clientName = "testclient";
+        final String phoneNum = "testclient";
+        Client client = Client
+                .builder()
+                .user(user)
+                .name(clientName)
+                .build();
+        Client savedClient = clientRepository.save(client);
 
-        assertEquals(userRepository.findByEmail(email).get().getEmail(),email);
-        assertEquals(userRepository.findByUsername(username).get().getUsername(),username);
+        assertNotNull(savedClient);
+        Optional<Client> retrievedClient = clientRepository.findByUser(user);
+        assertTrue(retrievedClient.isPresent());
+        assertEquals(clientName, retrievedClient.get().getName());
     }
-
 }

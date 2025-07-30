@@ -4,6 +4,7 @@ package com.emergency.roadside.help.client_booking_backend.services.client;
 import com.emergency.roadside.help.client_booking_backend.configs.auth.JWTService;
 import com.emergency.roadside.help.client_booking_backend.model.client.*;
 
+import com.emergency.roadside.help.common_module.exceptions.customexceptions.BadDataException;
 import com.emergency.roadside.help.common_module.exceptions.customexceptions.ItemNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -48,7 +49,9 @@ public class AuthenticationService {
     //later we will add more roles to a User, only via endpoint
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-
+        if (userRepository.findByUsername(request.getUsername()).isPresent()){
+            throw new BadDataException("User already exists with this username");
+        }
 
         User user = User.builder()
                 .email(request.getEmail())
@@ -70,8 +73,13 @@ public class AuthenticationService {
 
     }
 
+    //this is called by other microservices, where they just need an user, and will create associated things like driver
     @Transactional
     public AuthResponse registerUserOnly(@Valid RegisterRequest request) {
+
+        if (userRepository.findByUsername(request.getUsername()).isPresent()){
+            throw new BadDataException("User already exists with this username");
+        }
         User user = User.builder()
                 .email(request.getEmail())
                 .username(request.getUsername())

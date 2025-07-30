@@ -169,10 +169,31 @@
 			<scope>test</scope>
 		</dependency>
 
+
+<!--this is to resolve an warning by mockito to start using inline mock maker-->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-inline</artifactId>
+			<version>5.2.0</version> <!-- or your version -->
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>
+
+
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>
+						-javaagent:${settings.localRepository}/org/mockito/mockito-core/5.17.0/mockito-core-5.17.0.jar
+						-Xshare:off
+					</argLine>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
