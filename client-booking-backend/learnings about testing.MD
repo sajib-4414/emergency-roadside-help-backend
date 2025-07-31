@@ -30,6 +30,14 @@ Scenario	Required Annotations
 Default: all DB changes rolled back after test	@Transactional only is sufficient, u can still put rollback/rollback(true), wont harm
 Want to commit changes from a test (rare cases)	@Transactional plus @Rollback(false) or @Commit
 
+service layer testing:
+we use mock from mockito, this is purely service layer testing, mockito is used in collaboration with Junit
+
+controller layer testing:
+we use webmvc test thats from the springboot testing, and for that we use spring boot test's mockbean
+here we are mostly using spring boot test's utilities
+
+**Reserved keyword issue in h2 database for testing**
 so in my case testcase was crashing because i had a year column in vehcile table, although changed later. but in h2 database
 year is a reserved keywrod, so it wont allow running the migration to the point where i changed the year column name.
 i tried putting the

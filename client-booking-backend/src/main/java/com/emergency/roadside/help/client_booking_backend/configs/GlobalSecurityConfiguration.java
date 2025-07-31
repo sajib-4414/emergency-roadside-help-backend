@@ -48,7 +48,7 @@ public class GlobalSecurityConfiguration {
                                 .anyRequest()
                                 .authenticated()
 
-                               // .requestMatchers("/**").permitAll()
+                               // .requestMatchers("/**").permitAll() //means alloweing all request, do it only for testing
                 )
                 .sessionManagement( sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
@@ -60,7 +60,8 @@ public class GlobalSecurityConfiguration {
     }
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:3010","http://localhost:3011"));
+//        configuration.addAllowedOriginPattern("*"); // Use this instead of setAllowedOrigins for wildcard support, to allow all for development
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000","http://localhost:3010","http://localhost:3011"));
         configuration.setAllowedMethods(Arrays.asList("*"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

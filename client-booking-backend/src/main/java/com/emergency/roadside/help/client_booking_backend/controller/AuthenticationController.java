@@ -7,6 +7,7 @@ import com.emergency.roadside.help.client_booking_backend.model.client.User;
 import com.emergency.roadside.help.client_booking_backend.services.client.AuthenticationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,7 +37,7 @@ public class AuthenticationController {
 
     @PostMapping(value = "/register-user-only", produces = "application/json")
     public ResponseEntity<AuthResponse> registerUserOnly(@Valid @RequestBody RegisterRequest request){
-        return ResponseEntity.ok(service.registerUserOnly(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.registerUserOnly(request));
     }
 
     @PostMapping(value = "/validate-and-get-user", produces = "application/json")
