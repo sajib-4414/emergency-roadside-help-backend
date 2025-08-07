@@ -83,6 +83,12 @@ public class BookingAggregate {
         this.address = event.getAddress();
     }
 
+    @EventHandler
+    public void onBookingCreatedEvent2(BookingCreatedEvent event
+
+    ){
+        log.info("this is also a BookingCreatedEvent listener");
+    }
     @CommandHandler
     public void onUpdateBookingWithResponderFoundCommand(UpdateBookingWithResponderFoundCommand command){
 
@@ -131,7 +137,7 @@ public class BookingAggregate {
     }
 
     @EventSourcingHandler
-    public void onBookingCreatedEvent(BookingAssignmentDoneWaitingToAcceptEvent event){
+    public void onBookingCreatedDoneWaitingToAcceptEventEvent(BookingAssignmentDoneWaitingToAcceptEvent event){
         this.bookingId = event.getBookingId();
         this.status = event.getStatus();
         this.assignmentId =event.getAssignmentId();

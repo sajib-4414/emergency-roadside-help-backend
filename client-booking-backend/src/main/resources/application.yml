@@ -46,3 +46,9 @@ otel:
     otlp:
       endpoint: http://localhost:4317
       protocol: grpc
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

@@ -683,3 +683,11 @@ i created this assignment, and here is the assignment id, so i would have the as
 but it did not work, i saw that due to parallel processing, byt th etime 15s went, i saw that i did not have the assignment id,
 so i had to do this syncrhonously, so i started the timer of 15s only after i got the event that an assignment was created
 with reserved state, and i updated the assignment id on the booking service.
+
+-------
+one more common problem with axon/other eventdb that if that crashes or for some reason we
+are not able to match tokens, so need to reset that db, it means that all the events that were supposed to be 
+written in the db, i mean waiting to be written because of delayed write will be lost, meaning some data
+lost. in these kind of systems, data first go to the event db, so we have to be very careful.
+in axon whenever i face any token issue, i reset the tables of saga and token entry, but in produciton
+i cannot just delete some data. 

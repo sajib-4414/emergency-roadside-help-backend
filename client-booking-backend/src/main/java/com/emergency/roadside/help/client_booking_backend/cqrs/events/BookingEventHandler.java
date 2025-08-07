@@ -25,7 +25,9 @@ import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.queryhandling.QueryHandler;
 import org.axonframework.queryhandling.QueryUpdateEmitter;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 
 @Slf4j
 @Component
@@ -38,8 +40,11 @@ public class BookingEventHandler {
     private CacheService cacheService;
     private QueryUpdateEmitter queryUpdateEmitter;
 
+
     @EventHandler
-    public void onBookingCreatedEvent(BookingCreatedEvent event, ReplayStatus replayStatus){
+    public void onBookingCreatedEvent(BookingCreatedEvent event
+            , ReplayStatus replayStatus
+    ){
 
 //        if(true)
 //            throw new NullPointerException();
